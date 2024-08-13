@@ -8,10 +8,12 @@ import './_overhide.scss';
 // 全局对象，用于调试信息输出
 Object.defineProperty(window, 'DEBUG_INFO', {
   get: function () {
-    const projectStr = `Certbot 相关信息输出：`;
-    const githubStr = `项目地址：https://github.com/PiDazhong/certbot`;
-    const certbotStr = `部署地址：https://certbot.quantanalysis.cn`;
-    return `\n${projectStr}\n\n${githubStr}\n\n${certbotStr}\n`;
+    const projectStr = `/      Certbot 相关信息:                                /`;
+    const githubStr = `/      项目地址：https://github.com/PiDazhong/certbot   /`;
+    const certbotStr = `/      部署地址：https://certbot.quantanalysis.cn       /`;
+    const authorStr = `/      作者vx: pdz_wechat                              /`;
+    const lineStr = `- - - - - - - - - - - - - - - - - - - - - - - - - - - -`;
+    return `${lineStr}\n${projectStr}\n\n${githubStr}\n\n${certbotStr}\n\n${authorStr}\n${lineStr}`;
   },
 });
 

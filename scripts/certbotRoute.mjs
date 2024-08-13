@@ -160,7 +160,7 @@ const executeCertbotCommand = (conn, cmd, domain, newNums, processId) => {
           buffer += data.toString();
           console.log('STDOUT:', data.toString());
 
-          const regex = /with the following value:\s+([a-zA-Z0-9_-]+)/;
+          const regex = /with the following value:\s+([a-zA-Z0-9_-]+)/i;
           const match = buffer.match(regex);
           if (match && match[1]) {
             matched = true;
@@ -221,7 +221,7 @@ const sendQuery = async (invitationCode, domain, newNums) => {
 
       // 启动定时器，每秒检查一次缓存的数据
       const timer = setInterval(() => {
-        const regex = /with the following value:\s+([a-zA-Z0-9_-]+)/;
+        const regex = /with the following value:\s+([a-zA-Z0-9_-]+)/i;
         const match = buffer.match(regex);
         if (match && match[1]) {
           matched = true;

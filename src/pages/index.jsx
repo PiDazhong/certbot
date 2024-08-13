@@ -1,10 +1,4 @@
-import {
-  useLayoutEffect,
-  useEffect,
-  useState,
-  useRef,
-  useCallback,
-} from 'react';
+import { useState, useRef } from 'react';
 import { Button, Input, message, Tooltip } from 'antd';
 import { InfoCircleOutlined, CloseOutlined } from '@ant-design/icons';
 import { fetchRequest } from 'utils';
@@ -12,11 +6,11 @@ import './index.scss';
 
 const Certbot = () => {
   // 邀请码
-  const [invitationCode, setInvitationCode] = useState('xiaopi_txdy');
+  const [invitationCode, setInvitationCode] = useState('');
   // 邀请码可用次数
   const [remainNums, setRemainNums] = useState(0);
   // 域名
-  const [domain, setDomain] = useState('babazhu.love');
+  const [domain, setDomain] = useState('example.com');
   // 冷却时间
   const [remainTime, setRemainTime] = useState(300);
   // 进程id
@@ -161,7 +155,7 @@ const Certbot = () => {
               value={invitationCode}
               onChange={(e) => setInvitationCode(e.target.value)}
             />
-            <Tooltip title="由于证书申请需要服务器资源，所以这里需要找作者要邀请码才能继续申请证书，可以点击测试邀请码剩余可用次数">
+            <Tooltip title="由于证书申请需要服务器资源，所以这里需要找作者要邀请码才能继续申请证书，请打开控制台联系作者">
               <InfoCircleOutlined />
             </Tooltip>
             <Button onClick={() => queryRemainNums()}>测试</Button>
@@ -175,7 +169,7 @@ const Certbot = () => {
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
             />
-            <Tooltip title="请直接输入顶级域名，申请下来的证书会包含这个顶级域名下的所有一级域名">
+            <Tooltip title="请直接输入顶级域名，申请下来的证书会包含这个顶级域名下的所有一级域名，必须点击测试，得到邀请码剩余可用次数才能点击申请">
               <InfoCircleOutlined />
             </Tooltip>
           </div>
@@ -199,25 +193,28 @@ const Certbot = () => {
         </div>
         <div className="line-item">
           <div className="line-item-label">下载冷却</div>
-          <div className="line-item-content">剩余冷却时间：{remainTime}</div>
-        </div>
-        <div className="line-item">
-          <div className="line-item-label"></div>
           <div className="line-item-content">
+            <div className="text-content">剩余冷却时间：{remainTime}</div>
             <Tooltip
               title={
                 remainTime > 0 &&
                 '请等待冷却归零后再开始下载，冷却时间是为了防止dns的txt解析延迟生效，请见谅'
               }
             >
-              <Button
-                type="primary"
-                // disabled={remainTime > 0 || !processId}
-                onClick={() => downCertbot()}
-              >
-                点击下载
-              </Button>
+              <InfoCircleOutlined />
             </Tooltip>
+          </div>
+        </div>
+        <div className="line-item">
+          <div className="line-item-label"></div>
+          <div className="line-item-content">
+            <Button
+              type="primary"
+              disabled={remainTime > 0 || !processId}
+              onClick={() => downCertbot()}
+            >
+              点击下载
+            </Button>
           </div>
         </div>
       </div>

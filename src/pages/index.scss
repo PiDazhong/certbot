@@ -1,15 +1,18 @@
 .certbot-page {
   width: 100%;
-  height: calc(100vh - 100px);
+  height: 800px;
   display: flex;
   align-items: center;
   justify-content: center;
 
   .certbot-page-content {
-    height: 1000px;
-    width: 1000px;
-    border: 2px solid var(--black10);
-    border-radius: 2px;
+    height: 400px;
+    width: 750px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    box-shadow: 0 25px 50px var(--black20-login);
   }
 
   .line-item {
@@ -41,6 +44,11 @@
       button {
         margin: 0 12px;
         border-radius: 2px;
+      }
+
+      .text-content {
+        width: 200px;
+        color: var(--black85);
       }
     }
   }
