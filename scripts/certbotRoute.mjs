@@ -387,6 +387,7 @@ router.post('/downCertbot', (req, res) => {
       });
     }
     // 无论如何，确保进程被杀死并清理资源
+    child.kill();
     delete globalConn[processId];
   });
 });
