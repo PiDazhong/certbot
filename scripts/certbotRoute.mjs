@@ -52,7 +52,6 @@ const sendSSHQuery = async (invitationCode, domain, newNums) => {
         WHERE status='running' AND domain='${domain}'
       `;
       const results = await runSql(querySql);
-      console.log('查询结果:', results);
 
       // 如果有正在进行的进程，则删除该记录
       if (results.length > 0) {
