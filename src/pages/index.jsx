@@ -199,7 +199,12 @@ const Certbot = () => {
         <div className="line-item">
           <div className="line-item-label"></div>
           <div className="line-item-content">
-            <Tooltip title={remainTime > 0 && '请等待冷却归零后再开始下载'}>
+            <Tooltip
+              title={
+                remainTime > 0 &&
+                '请等待冷却归零后再开始下载，冷却时间是为了防止dns的txt解析延迟生效，请见谅'
+              }
+            >
               <Button
                 type="primary"
                 // disabled={remainTime > 0 || !processId}

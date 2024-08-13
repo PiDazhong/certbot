@@ -371,18 +371,6 @@ router.post('/downCertbot', (req, res) => {
         }
       });
     }
-
-    // 检测证书下载成功的提示
-    if (
-      buffer.includes(
-        'Congratulations! Your certificate and chain have been saved',
-      )
-    ) {
-      sendResponse({
-        success: true,
-        message: '证书下载成功',
-      });
-    }
   });
 
   child.stderr.on('data', (errData) => {
