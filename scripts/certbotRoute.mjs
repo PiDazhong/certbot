@@ -242,6 +242,26 @@ const sendQuery = async (invitationCode, domain, newNums) => {
             },
           });
         }
+
+        const existRegex = /You have an existing certificate/i;
+        if (existRegex.test(buffer)) {
+          // 生成压缩包命令
+          const destinationPath = '/icons/Certificate';
+          const folderPath = `/etc/letsencrypt/live`;
+          const zipCommand = `cd ${folderPath} && zip -r ${destinationPath}/${processId}.zip ${domain}`;
+          exec(zipCommand, (err, stdout, stderr) => {
+            if (err) {
+              reject(new Error('error: ' + stderr.toString()));
+            } else {
+              resolve({
+                success: true,
+                data: {
+                  existUrl: `https://certbot.quantanalysis.cn${destinationPath}/${processId}.zip`,
+                },
+              });
+            }
+          });
+        }
       }, 1000);
 
       // 10秒后检查是否匹配成功，未成功则终止进程
@@ -338,22 +358,23 @@ router.post('/downCertbot', (req, res) => {
     buffer += output;
 
     // 正则检测 "verify the TXT record has been deployed" 的提示
-    const pressEnterRegex = /verify the TXT record has been deployed/;
-    if (pressEnterRegex.test(output)) {
+    const pressEnterRegex = /verify the TXT record has been deployed/i;
+    if (pressEnterRegex.test(buffer)) {
       child.stdin.write('\n'); // 如果匹配到提示，则继续输入回车
     }
 
     // 正则检测 "Some challenges have failed" 的提示
-    const overRegex = /Some challenges have failed/;
-    if (overRegex.test(output)) {
+    const overRegex = /Some challenges have failed/i;
+    if (overRegex.test(buffer)) {
       sendResponse({
-        error: `证书下载过程中发生错误: ${output}`,
+        error: `证书下载过程中发生错误: ${buffer}`,
       });
     }
 
     // 正则检测 "Successfully received certificate" 的提示
-    const successRegex = /Successfully received certificate/;
-    if (successRegex.test(output)) {
+    const successRegex = /Successfully received certificate/i;
+    const existRegex = /You have an existing certificate/i;
+    if (successRegex.test(buffer) || existRegex.test(buffer)) {
       // 生成压缩包命令
       const destinationPath = '/icons/Certificate';
       const folderPath = `/etc/letsencrypt/live`;

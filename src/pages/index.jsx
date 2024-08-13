@@ -67,7 +67,12 @@ const Certbot = () => {
         setApplyLoading,
       );
       if (success) {
-        const { text, newNums, processId } = data;
+        const { text, newNums, processId, existUrl } = data;
+        if (existUrl) {
+          message.warning('域名已存在证书地址，无需重新申请');
+          downZip(existUrl);
+          return;
+        }
         setProcessId(processId);
         message.success({
           className: 'apply-certbot-message',
