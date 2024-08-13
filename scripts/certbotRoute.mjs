@@ -376,7 +376,7 @@ router.post('/downCertbot', (req, res) => {
   child.stderr.on('data', (errData) => {
     console.error('STDERR:', errData.toString());
     sendResponse({
-      error: `证书下载过程中发生错误: ${errData.toString()}`,
+      error: `发生错误: ${errData.toString()}`,
     });
   });
 
