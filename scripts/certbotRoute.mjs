@@ -2,6 +2,7 @@
  * @des 用户列表 相关接口
  */
 import express from 'express';
+import { execSync } from 'child_process';
 
 import { DB_NAME, isProd, runSql, sshConfig } from './constsES5.mjs';
 
@@ -185,8 +186,7 @@ const executeCertbotCommand = (conn, cmd, domain, newNums, processId) => {
 // 假设你有一个执行本地命令的辅助函数
 const execLocalCommand = async (cmd) => {
   return new Promise((resolve, reject) => {
-    const exec = require('child_process').exec;
-    exec(cmd, (error, stdout, stderr) => {
+    execSync(cmd, (error, stdout, stderr) => {
       if (error) {
         reject(`执行命令时发生错误: ${stderr}`);
       } else {
@@ -199,8 +199,7 @@ const execLocalCommand = async (cmd) => {
 // 辅助函数：执行命令并设置超时
 const executeWithTimeout = (cmd, timeout) => {
   return new Promise((resolve, reject) => {
-    const exec = require('child_process').exec;
-    const child = exec(cmd);
+    const child = execSync(cmd);
 
     let buffer = ''; // 缓存命令输出
     let isTimedOut = false;
