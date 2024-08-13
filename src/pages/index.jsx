@@ -118,15 +118,32 @@ const Certbot = () => {
     }
   };
 
-  // 开始下载正式
+  const downZip = (url) => {
+    // 创建一个新的 a 标签
+    const a = document.createElement('a');
+    // 设置 a 标签的 href 为传入的下载链接
+    a.href = url;
+    // 设置下载文件的名称
+    a.download = `${domain}.zip`;
+    // 将 a 标签添加到文档中
+    document.body.appendChild(a);
+    // 触发 a 标签的点击事件，开始下载
+    a.click();
+    // 下载完成后移除 a 标签
+    document.body.removeChild(a);
+  };
+
+  // 开始下载证书
   const downCertbot = async () => {
-    const { success, data } = await fetchRequest('/mysql/downCertbot', 'post', {
-      processId,
-      domain,
-    });
-    if (success) {
-      console.log('data', data);
-    }
+    downZip(`https://certbot.quantanalysis.cn/icons/night.png`);
+    // const { success, data } = await fetchRequest('/mysql/downCertbot', 'post', {
+    //   processId,
+    //   domain,
+    // });
+    // if (success) {
+    //   console.log('data', data);
+    //   downZip(data);
+    // }
   };
 
   return (

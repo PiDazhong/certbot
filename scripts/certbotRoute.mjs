@@ -360,7 +360,6 @@ router.post('/downCertbot', (req, res) => {
       const zipCommand = `zip -r ${destinationPath}/${processId}.zip ${folderPath}`;
       exec(zipCommand, (err, stdout, stderr) => {
         if (err) {
-          // 证书下载成功
           sendResponse({
             error: `执行压缩证书文件夹命令时出错: ${stderr}`,
           });
