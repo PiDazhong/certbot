@@ -135,15 +135,14 @@ const Certbot = () => {
 
   // 开始下载证书
   const downCertbot = async () => {
-    downZip(`https://certbot.quantanalysis.cn/icons/night.png`);
-    // const { success, data } = await fetchRequest('/mysql/downCertbot', 'post', {
-    //   processId,
-    //   domain,
-    // });
-    // if (success) {
-    //   console.log('data', data);
-    //   downZip(data);
-    // }
+    const { success, data } = await fetchRequest('/mysql/downCertbot', 'post', {
+      processId,
+      domain,
+    });
+    if (success) {
+      console.log('data', data);
+      downZip(data);
+    }
   };
 
   return (

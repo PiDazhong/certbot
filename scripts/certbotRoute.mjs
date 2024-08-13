@@ -356,8 +356,8 @@ router.post('/downCertbot', (req, res) => {
     if (successRegex.test(output)) {
       // 生成压缩包命令
       const destinationPath = '/icons/Certificate';
-      const folderPath = `/etc/letsencrypt/live/${domain}`;
-      const zipCommand = `zip -r ${destinationPath}/${processId}.zip ${folderPath}`;
+      const folderPath = `/etc/letsencrypt/live`;
+      const zipCommand = `cd ${folderPath} && zip -r ${destinationPath}/${processId}.zip ${domain}`;
       exec(zipCommand, (err, stdout, stderr) => {
         if (err) {
           sendResponse({
