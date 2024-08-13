@@ -117,10 +117,13 @@ const Certbot = () => {
 
   // 开始下载正式
   const downCertbot = async () => {
-    const { data } = await fetchRequest('/mysql/downCertbot', 'post', {
+    const { success, data } = await fetchRequest('/mysql/downCertbot', 'post', {
       processId,
+      domain,
     });
-    console.log('data', data);
+    if (success) {
+      console.log('data', data);
+    }
   };
 
   return (

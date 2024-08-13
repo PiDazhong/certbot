@@ -2,7 +2,7 @@
  * @des 用户列表 相关接口
  */
 import express from 'express';
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
 
 import { DB_NAME, isProd, runSql, sshConfig } from './constsES5.mjs';
 
@@ -183,115 +183,83 @@ const executeCertbotCommand = (conn, cmd, domain, newNums, processId) => {
   });
 };
 
-// 假设你有一个执行本地命令的辅助函数
-const execLocalCommand = async (cmd) => {
-  return new Promise((resolve, reject) => {
-    execSync(cmd, (error, stdout, stderr) => {
-      if (error) {
-        reject(`执行命令时发生错误: ${stderr}`);
-      } else {
-        resolve(stdout);
-      }
-    });
-  });
-};
-
-// 辅助函数：执行命令并设置超时
-const executeWithTimeout = (cmd, timeout) => {
-  return new Promise((resolve, reject) => {
-    const child = execSync(cmd);
-
-    let buffer = ''; // 缓存命令输出
-    let isTimedOut = false;
-
-    // 监听命令输出
-    child.stdout.on('data', (data) => {
-      buffer += data.toString();
-    });
-
-    child.stderr.on('data', (data) => {
-      buffer += data.toString();
-    });
-
-    // 监听命令结束
-    child.on('close', (code) => {
-      if (!isTimedOut) {
-        resolve(buffer);
-      }
-    });
-
-    // 设置超时处理
-    setTimeout(() => {
-      isTimedOut = true;
-      child.kill(); // 终止命令
-      reject(new Error('命令执行超时'));
-    }, timeout);
-  });
-};
-
 const sendQuery = async (invitationCode, domain, newNums) => {
-  try {
+  return new Promise(async (resolve, reject) => {
     const processId = Date.now(); // 获取当前时间戳作为 processId
     console.log('processId', processId);
 
-    // 查询数据库中是否有正在进行的进程
-    const querySql = `
-      SELECT process_id, status 
-      FROM ${DB_NAME}.process_id_table
-      WHERE status='running' AND domain='${domain}'
-    `;
-    const results = await runSql(querySql);
-    console.log('查询结果:', results);
-
-    // 如果有正在进行的进程，则删除该记录
-    if (results.length > 0) {
-      await runSql(
-        `DELETE FROM ${DB_NAME}.process_id_table WHERE domain='${domain}'`,
-      );
-      console.log('删除正在进行的进程');
-    }
-
-    // 执行 certbot 命令
-    const certbotCmd = `sudo certbot certonly --manual --preferred-challenges dns -d "*.${domain}" -d "${domain}"`;
-
-    const execResult = await executeWithTimeout(certbotCmd, 10000); // 设置10秒超时
-    console.log('certbot 执行结果:', execResult);
-
-    // 使用正则表达式匹配输出中的 TXT 记录
-    const regex = /with the following value:\s+([a-zA-Z0-9_-]+)/;
-    const match = execResult.match(regex);
-
-    if (match && match[1]) {
-      const txtRecord = match[1];
-      console.log('提取出的 TXT 记录:', txtRecord);
-
-      // 将该进程插入到数据库中
-      const insertSql = `
-        INSERT INTO ${DB_NAME}.process_id_table (process_id, status, domain)
-        VALUES ('${processId}', 'running', '${domain}')
+    try {
+      const querySql = `
+        SELECT process_id, status 
+        FROM ${DB_NAME}.process_id_table
+        WHERE status='running' AND domain='${domain}'
       `;
-      await runSql(insertSql);
+      const results = runSql(querySql);
+      // 如果有正在进行的进程，则删除该记录
+      if (results.length > 0) {
+        await runSql(
+          `DELETE FROM ${DB_NAME}.process_id_table WHERE domain='${domain}'`,
+        );
+      }
 
-      return {
-        success: true,
-        message: '操作成功',
-        data: {
-          text: txtRecord,
-          newNums,
-          processId,
-        },
-      };
-    } else {
-      return {
-        error: '未能匹配到所需的 TXT 记录',
-      };
+      const certbotCmd = `sudo certbot certonly --manual --preferred-challenges dns -d "*.${domain}" -d "${domain}"`;
+      // 初始化 SSH 连接
+      const child = exec(certbotCmd);
+      globalConn[processId] = child;
+      let buffer = '';
+      let matched = false;
+
+      child.stdout.on('data', (data) => {
+        buffer += data.toString();
+        console.log('STDOUT:', data.toString());
+      });
+
+      child.stderr.on('data', (errData) => {
+        console.error('STDERR:', errData.toString());
+        reject(new Error('STDERR: ' + errData.toString()));
+      });
+
+      // 启动定时器，每秒检查一次缓存的数据
+      const timer = setInterval(() => {
+        const regex = /with the following value:\s+([a-zA-Z0-9_-]+)/;
+        const match = buffer.match(regex);
+        if (match && match[1]) {
+          matched = true;
+          const txtRecord = match[1];
+          console.log('提取出的 TXT 记录:', txtRecord);
+
+          clearInterval(timer); // 清除定时器
+          // 保存匹配到的结果到 global.processid
+          global.processid = global.processid || {};
+          global.processid[processId] = { txtRecord };
+
+          resolve({
+            success: true,
+            data: {
+              text: txtRecord,
+              newNums,
+              processId,
+            },
+          });
+        }
+      }, 1000);
+
+      // 10秒后检查是否匹配成功，未成功则终止进程
+      setTimeout(() => {
+        if (!matched) {
+          console.log('10秒内未匹配到所需的 TXT 记录，终止进程');
+          clearInterval(timer); // 清除定时器
+          child.kill(); // 终止命令进程
+          resolve({
+            error: `10秒内未匹配到所需的 TXT 记录`,
+          });
+        }
+      }, 10000);
+    } catch (err) {
+      console.error('错误:', err);
+      reject(new Error('error: ' + err.toString()));
     }
-  } catch (err) {
-    console.error('生产环境操作错误:', err);
-    return {
-      error: err.message,
-    };
-  }
+  });
 };
 
 // 开始证书的申请 的接口
@@ -331,75 +299,109 @@ router.post('/applyCertbot', async (req, res) => {
   } catch (e) {
     console.log('e', e);
     res.send({
-      error: '申请失败',
+      error: `申请失败 ${e}`,
     });
   }
 });
 
 // 开始证书的下载 接口
-router.post('/downCertbot', async (req, res) => {
-  const { processId } = req.body;
+router.post('/downCertbot', (req, res) => {
+  const { processId, domain } = req.body;
 
-  try {
-    // 从全局存储中获取对应的 SSH 连接
-    const conn = globalConn[processId];
+  const child = globalConn[processId];
 
-    if (!conn) {
-      return res.send({
-        error: '无法找到对应的 SSH 连接',
+  if (!child) {
+    return res.send({
+      error: '无法找到对应的进程',
+    });
+  }
+
+  // 继续向进程中发送输入
+  child.stdin.write('\n'); // 发送回车
+
+  let buffer = '';
+  let responseSent = false;
+
+  const sendResponse = (response) => {
+    if (!responseSent) {
+      responseSent = true;
+      res.send(response);
+      // 确保在发送响应后，正确关闭进程并清理资源
+      child.kill();
+      delete globalConn[processId];
+    }
+  };
+
+  child.stdout.on('data', (data) => {
+    const output = data.toString();
+    console.log('STDOUT:', output);
+    buffer += output;
+
+    // 正则检测 "verify the TXT record has been deployed" 的提示
+    const pressEnterRegex = /verify the TXT record has been deployed/;
+    if (pressEnterRegex.test(output)) {
+      child.stdin.write('\n'); // 如果匹配到提示，则继续输入回车
+    }
+
+    // 正则检测 "Some challenges have failed" 的提示
+    const overRegex = /Some challenges have failed/;
+    if (overRegex.test(output)) {
+      sendResponse({
+        error: `证书下载过程中发生错误: ${output}`,
       });
     }
 
-    // 执行回车键来继续证书下载
-    conn.exec(' ', (err, stream) => {
-      if (err) {
-        console.error('exec 错误:', err);
-        return res.send({
-          error: '执行回车键失败',
-        });
-      }
-
-      let buffer = '';
-      let success = false;
-
-      stream
-        .on('close', () => {
-          if (!success) {
-            res.send({
-              error: '未成功获取到证书下载的结果',
-            });
-          }
-        })
-        .on('data', (data) => {
-          console.log('STDOUT:', data.toString());
-          buffer += data.toString();
-
-          // 解析数据，根据具体的命令输出来判断证书是否下载成功
-          if (
-            buffer.includes(
-              'Congratulations! Your certificate and chain have been saved',
-            )
-          ) {
-            success = true;
-            res.send({
-              success: true,
-              message: '证书下载成功',
-            });
-          }
-        })
-        .stderr.on('data', (errData) => {
-          console.error('STDERR:', errData.toString());
-          res.send({
-            error: `证书下载过程中发生错误: ${errData.toString()}`,
+    // 正则检测 "Successfully received certificate" 的提示
+    const successRegex = /Successfully received certificate/;
+    if (successRegex.test(output)) {
+      // 生成压缩包命令
+      const destinationPath = '/icons/Certificate';
+      const folderPath = `/etc/letsencrypt/live/${domain}`;
+      const zipCommand = `zip -r ${destinationPath}/${processId}.zip ${folderPath}`;
+      exec(zipCommand, (err, stdout, stderr) => {
+        if (err) {
+          // 证书下载成功
+          sendResponse({
+            error: `执行压缩证书文件夹命令时出错: ${stderr}`,
           });
-        });
+        } else {
+          sendResponse({
+            success: true,
+            data: `https://certbot.quantanalysis.cn${destinationPath}/${processId}.zip`,
+          });
+        }
+      });
+    }
+
+    // 检测证书下载成功的提示
+    if (
+      buffer.includes(
+        'Congratulations! Your certificate and chain have been saved',
+      )
+    ) {
+      sendResponse({
+        success: true,
+        message: '证书下载成功',
+      });
+    }
+  });
+
+  child.stderr.on('data', (errData) => {
+    console.error('STDERR:', errData.toString());
+    sendResponse({
+      error: `证书下载过程中发生错误: ${errData.toString()}`,
     });
-  } catch (e) {
-    console.log('e', e);
-    res.send({
-      error: `申请失败 ${e}`,
-    });
-  }
+  });
+
+  child.on('close', (code) => {
+    if (!responseSent) {
+      sendResponse({
+        error: '未成功获取到证书下载的结果',
+      });
+    }
+    // 无论如何，确保进程被杀死并清理资源
+    delete globalConn[processId];
+  });
 });
 
 export default router;
