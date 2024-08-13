@@ -55,6 +55,7 @@ const Certbot = () => {
       message.warning('域名不合法');
       return;
     }
+    setRemainTime(300);
     try {
       const { success, data } = await fetchRequest(
         '/mysql/applyCertbot',
@@ -95,7 +96,9 @@ const Certbot = () => {
         });
         if (remainTimeRef.current) {
           clearInterval(remainTimeRef.current);
+          remainTimeRef.current = null;
         }
+
         remainTimeRef.current = setInterval(() => {
           console.log('Timer ticking');
           setRemainTime((prev) => {
