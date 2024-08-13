@@ -1,0 +1,118 @@
+body {
+  --white-login: rgba(255, 255, 255, 1);
+
+  --black20-login: rgba(0, 0, 0, 0.2);
+  --black65-login: rgba(0, 0, 0, 0.65);
+
+  --brand60-login: rgba(24, 144, 255, 0.6);
+
+  --blue-background-1-login: rgba(5, 145, 255, 0.1);
+
+  --error: rgba(255, 77, 79, 1);
+  --error10: rgba(255, 77, 79, 0.1);
+  --error20: rgba(255, 77, 79, 0.2);
+  --error30: rgba(255, 77, 79, 0.3);
+  --error50: rgba(255, 77, 79, 0.5);
+  --error80: rgba(255, 77, 79, 0.8);
+
+  --success: rgba(103, 194, 58, 1);
+  --success10: rgba(103, 194, 58, 0.1);
+  --success20: rgba(103, 194, 58, 0.2);
+  --success30: rgba(103, 194, 58, 0.3);
+  --success50: rgba(103, 194, 58, 0.5);
+  --success80: rgba(103, 194, 58, 0.8);
+
+  --lightgreen: rgba(97, 241, 25, 1);
+
+  --warning: rgba(250, 173, 20, 1);
+  --warning10: rgba(250, 173, 20, 0.1);
+  --warning20: rgba(250, 173, 20, 0.2);
+  --warning30: rgba(250, 173, 20, 0.3);
+  --warning50: rgba(250, 173, 20, 0.5);
+  --warning80: rgba(250, 173, 20, 0.8);
+
+  --orange: rgba(252, 125, 50, 1);
+  --orange10: rgba(252, 125, 50, 0.1);
+  --orange20: rgba(252, 125, 50, 0.2);
+  --orange80: rgba(252, 125, 50, 0.8);
+  --orange80-opacity1: rgba(255, 168, 100);
+
+  --deepred: rgba(191, 34, 68, 1);
+  --deepred50: rgba(191, 34, 68, 0.5);
+  --deepred10: rgba(191, 34, 68, 0.1);
+
+  --redpurple: rgba(136, 14, 79, 1);
+  --redpurple50: rgba(136, 14, 79, 0.5);
+  --redpurple10: rgba(136, 14, 79, 0.1);
+
+  --purple: rgb(255, 100, 220, 1);
+  --purple10: rgb(255, 100, 220, 0.1);
+  --purple04: rgb(255, 100, 220, 0.04);
+  --purple08: rgb(255, 100, 220, 0.08);
+
+  --skyblue: rgba(135, 206, 235, 1); /* 天蓝色 */
+  --skyblue50: rgba(135, 206, 235, 50); /* 天蓝色 */
+  --skyblue20: rgba(135, 206, 235, 0.2); /* 天蓝色 */
+
+  --greenblue: rgb(43, 120, 180, 1); /* 蓝绿 */
+
+  --brown: rgba(165, 42, 42, 1);
+  --brownyellow: rgba(204, 119, 34, 1);
+  --brownred: rgb(220, 100, 40, 1);
+
+  &[data-theme='light'] {
+    --brand: rgba(24, 144, 255, 1); /** #1890ff */
+    --brand02: rgba(24, 144, 255, 0.02);
+    --brand10: rgba(24, 144, 255, 0.1);
+
+    --brand15: rgba(24, 144, 255, 0.15);
+    --brand15-opacity1: rgba(229, 235, 254, 1);
+
+    --brand35: rgba(24, 144, 255, 0.35);
+    --brand60: rgba(24, 144, 255, 0.6);
+
+    --brand80: rgba(24, 144, 255, 0.8);
+    --brand80-opacity1: rgb(73, 158, 248);
+
+    --backgound-ul: rgba(236, 241, 247, 1);
+
+    --selected-background: rgb(230, 244, 255, 1);
+
+    --grey: #ccc;
+    --grey-font: #333;
+
+    --white: rgba(255, 255, 255, 1);
+
+    --white85: rgba(255, 255, 255, 0.85);
+
+    --black04: rgba(0, 0, 0, 0.04);
+    --black05: rgba(0, 0, 0, 0.05);
+    --black10: rgba(0, 0, 0, 0.1);
+    --black15: rgba(0, 0, 0, 0.15);
+    --black20: rgba(0, 0, 0, 0.2);
+    --black25: rgba(0, 0, 0, 0.25);
+    --black45: rgba(0, 0, 0, 0.45);
+    --black65: rgba(0, 0, 0, 0.65);
+    --black85: rgba(0, 0, 0, 0.85);
+
+    --black02-opcity1: rgba(250, 250, 250, 1);
+    --black-bottom-bar: rgba(245, 245, 245, 1);
+    --black45-opcity1: rgba(140, 140, 140, 1);
+
+    --blue-press-1: #b3d3fc;
+    --blue-press-2: #67a7f9;
+    --blue-background-1: rgba(5, 145, 255, 0.1);
+
+    --login-bck-right: #4675cc;
+    --login-bck-left: #eeeff1;
+    --login-bck-middle: transparent;
+    --login-title: #4675cc;
+    --login-a: rgba(24, 144, 255, 0.6);
+    --login-btn-left: #dad2f2;
+    --login-btn-right: #a0bcf1;
+    --login-btn-hover-left: #aac2ee;
+    --login-btn-hover-right: #c5c0fa;
+    --login-star-white: rgba(255, 255, 255, 1);
+    --login-star-square: rgba(255, 255, 255, 1);
+  }
+}

@@ -1,0 +1,86 @@
+.certbot-page {
+  width: 100%;
+  height: calc(100vh - 100px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .certbot-page-content {
+    height: 1000px;
+    width: 1000px;
+    border: 2px solid var(--black10);
+    border-radius: 2px;
+  }
+
+  .line-item {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    .line-item-label {
+      width: 200px;
+      color: var(--black85);
+      text-align: right;
+      margin-right: 12px;
+    }
+
+    .line-item-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-left: 12px;
+
+      input {
+        width: 300px;
+        margin-right: 12px;
+        border-radius: 2px;
+      }
+
+      button {
+        margin: 0 12px;
+        border-radius: 2px;
+      }
+    }
+  }
+
+  .anticon-info-circle {
+    color: var(--black45);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--black25);
+    }
+  }
+}
+
+.apply-certbot-message {
+  height: 200px;
+
+  .ant-message-notice-content,
+  .ant-message-custom-content {
+    height: 200px !important;
+    font-size: 14px;
+  }
+
+  .apply-certbot-message-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    font-size: 15px !important;
+
+    span {
+      line-height: 30px;
+    }
+
+    .anticon-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 15px !important;
+      cursor: pointer;
+    }
+  }
+}
