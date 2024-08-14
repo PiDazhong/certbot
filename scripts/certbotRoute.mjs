@@ -44,7 +44,6 @@ const sendSSHQuery = async (invitationCode, domain, newNums) => {
   return new Promise(async (resolve, reject) => {
     try {
       const processId = Date.now(); // 获取当前时间戳作为 processId
-      console.log('processId', processId);
 
       // 查询库中是否有正在进行的进程
       const querySql = `
@@ -59,7 +58,6 @@ const sendSSHQuery = async (invitationCode, domain, newNums) => {
         await runSql(
           `DELETE FROM ${DB_NAME}.process_id_table WHERE domain='${domain}'`,
         );
-        console.log('删除正在进行的进程');
       }
 
       // 初始化 SSH 连接
@@ -68,12 +66,9 @@ const sendSSHQuery = async (invitationCode, domain, newNums) => {
 
       conn
         .on('ready', async () => {
-          console.log('连接服务器成功');
-
           try {
             // 创建SFTP会话
             const sftp = await createSftpSession(conn);
-            console.log('SFTP 会话已创建');
 
             // 执行 certbot 命令
             const certbotCmd = `sudo certbot certonly --manual --preferred-challenges dns -d "*.${domain}" -d "${domain}"`;
@@ -140,8 +135,6 @@ const executeCertbotCommand = (conn, cmd, domain, newNums, processId) => {
         return;
       }
 
-      console.log('certbot命令正在执行');
-
       // 将该进程插入到数据库中
       const insertSql = `
         INSERT INTO ${DB_NAME}.process_id_table (process_id, status, domain)
@@ -151,7 +144,6 @@ const executeCertbotCommand = (conn, cmd, domain, newNums, processId) => {
 
       stream
         .on('close', () => {
-          console.log('Stream关闭');
           if (!matched) {
             reject(new Error('连接关闭，未能匹配到所需的 TXT 记录'));
           }
@@ -175,7 +167,6 @@ const executeCertbotCommand = (conn, cmd, domain, newNums, processId) => {
       // 定时器在 10 秒后强制关闭连接
       setTimeout(() => {
         if (!matched) {
-          console.log('10秒内未匹配到所需的 TXT 记录，终止连接');
           reject(new Error('10秒内未匹配到所需的 TXT 记录，终止连接'));
         }
       }, 10000);
@@ -186,7 +177,6 @@ const executeCertbotCommand = (conn, cmd, domain, newNums, processId) => {
 const sendQuery = async (invitationCode, domain, newNums) => {
   return new Promise(async (resolve, reject) => {
     const processId = Date.now(); // 获取当前时间戳作为 processId
-    console.log('processId', processId);
 
     try {
       const querySql = `
@@ -267,7 +257,6 @@ const sendQuery = async (invitationCode, domain, newNums) => {
       // 10秒后检查是否匹配成功，未成功则终止进程
       setTimeout(() => {
         if (!matched) {
-          console.log('10秒内未匹配到所需的 TXT 记录，终止进程');
           clearInterval(timer); // 清除定时器
           child.kill(); // 终止命令进程
           resolve({
@@ -354,8 +343,8 @@ router.post('/downCertbot', (req, res) => {
 
   child.stdout.on('data', (data) => {
     const output = data.toString();
-    console.log('STDOUT:', output);
     buffer += output;
+    console.log('STDOUT:', buffer);
 
     // 正则检测 "verify the TXT record has been deployed" 的提示
     const pressEnterRegex = /verify the TXT record has been deployed/i;

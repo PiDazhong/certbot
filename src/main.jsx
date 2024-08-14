@@ -12,8 +12,9 @@ Object.defineProperty(window, 'DEBUG_INFO', {
     const githubStr = `/      项目地址：https://github.com/PiDazhong/certbot   /`;
     const certbotStr = `/      部署地址：https://certbot.quantanalysis.cn       /`;
     const authorStr = `/      作者vx: pdz_wechat                              /`;
+    const testStr = `/      测试邀请码: qwsd_cvfd_wdfc                       /`;
     const lineStr = `- - - - - - - - - - - - - - - - - - - - - - - - - - - -`;
-    return `${lineStr}\n${projectStr}\n\n${githubStr}\n\n${certbotStr}\n\n${authorStr}\n${lineStr}`;
+    return `${lineStr}\n${projectStr}\n\n${githubStr}\n\n${certbotStr}\n\n${authorStr}\n\n${testStr}\n\n${lineStr}\n`;
   },
 });
 

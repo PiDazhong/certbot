@@ -22,6 +22,10 @@ const Certbot = () => {
 
   // 查询邀请码剩余可用次数
   const queryRemainNums = async () => {
+    if (!invitationCode || !invitationCode.includes('_')) {
+      message.warning('邀请码不合法');
+      return;
+    }
     try {
       const { data: remainNums } = await fetchRequest(
         '/mysql/getRemainNums',
