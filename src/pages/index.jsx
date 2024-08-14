@@ -17,6 +17,8 @@ const Certbot = () => {
   const [processId, setProcessId] = useState(undefined);
   // 申请 loading
   const [applyLoading, setApplyLoading] = useState(false);
+  // 下载 loading
+  const [downLoading, setDownLoading] = useState(false);
   // 冷却时间计时器
   const remainTimeRef = useRef(null);
 
@@ -138,10 +140,15 @@ const Certbot = () => {
 
   // 开始下载证书
   const downCertbot = async () => {
-    const { success, data } = await fetchRequest('/mysql/downCertbot', 'post', {
-      processId,
-      domain,
-    });
+    const { success, data } = await fetchRequest(
+      '/mysql/downCertbot',
+      'post',
+      {
+        processId,
+        domain,
+      },
+      setDownLoading,
+    );
     if (success) {
       console.log('data', data);
       downZip(data);
@@ -216,6 +223,7 @@ const Certbot = () => {
               type="primary"
               disabled={remainTime > 0 || !processId}
               onClick={() => downCertbot()}
+              loading={downLoading}
             >
               点击下载
             </Button>
