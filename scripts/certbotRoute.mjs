@@ -3,6 +3,7 @@
  */
 import express from 'express';
 import { exec } from 'child_process';
+import dayjs from 'dayjs';
 
 import { DB_NAME, isProd, runSql, sshConfig } from './constsES5.mjs';
 
@@ -285,13 +286,18 @@ router.post('/applyCertbot', async (req, res) => {
 
     if (nums > 0) {
       const newNums = nums - 1;
-      const querySql = `
+      const updateSql = `
         update ${DB_NAME}.invitation_code_table
         set nums=${newNums}
         where 1=1 
         and code='${invitationCode}'
       `;
-      await runSql(querySql);
+      await runSql(updateSql);
+      const now = dayjs().format('YYYY-MM-DD HH:mm:ss');
+      const insertLogSql = `  
+        insert into ${DB_NAME}.use_log_table (code, time) values ('${invitationCode}', '${now}')
+      `;
+      await runSql(insertLogSql);
 
       if (!isProd) {
         const result = await sendSSHQuery(invitationCode, domain, newNums);
