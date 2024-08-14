@@ -158,6 +158,10 @@ const Certbot = () => {
   return (
     <div className="certbot-page">
       <div className="certbot-page-content">
+        <div className="title-item">
+          <img src="/favicon.ico" alt="Certificate" />
+          <div className="title-item-label">SSL证书申请</div>
+        </div>
         <div className="line-item">
           <div className="line-item-label">邀请码</div>
           <div className="line-item-content">
