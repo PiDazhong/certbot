@@ -276,6 +276,12 @@ const sendQuery = async (invitationCode, domain, newNums) => {
 router.post('/applyCertbot', async (req, res) => {
   const { invitationCode, domain } = req.body;
 
+  if (domain.includes('quantanalysis')) {
+    return res.send({
+      error: '本站域名不支持证书申请',
+    });
+  }
+
   try {
     const querySql = `
       select nums from ${DB_NAME}.invitation_code_table
@@ -322,6 +328,12 @@ router.post('/applyCertbot', async (req, res) => {
 // 开始证书的下载 接口
 router.post('/downCertbot', (req, res) => {
   const { processId, domain } = req.body;
+
+  if (domain.includes('quantanalysis')) {
+    return res.send({
+      error: '本站域名不支持证书下载',
+    });
+  }
 
   const child = globalConn[processId];
 
@@ -423,21 +435,32 @@ router.post('/downCertbot', (req, res) => {
 // 开始 强制打包 接口
 router.post('/forceDownCertbot', (req, res) => {
   const { domain } = req.body;
-  // 强制执行打包操作
-  const zipName = _.head(_.split(domain, '.'));
-  const zipCommand = `cd /etc/letsencrypt/live && rm -f ${domain}/README && zip -r /certificate/${zipName}.zip ${domain} -x "${domain}/README"`;
-  exec(zipCommand, (err, stdout, stderr) => {
-    if (err) {
-      res.send({
-        error: `执行压缩证书文件夹命令时出错: ${stderr}`,
-      });
-    } else {
-      res.send({
-        success: true,
-        data: `https://certbot.quantanalysis.cn/certificate/${zipName}.zip`,
-      });
-    }
-  });
+  if (domain.includes('quantanalysis')) {
+    return res.send({
+      error: '本站域名不支持证书下载',
+    });
+  }
+  try {
+    // 强制执行打包操作
+    const zipName = _.head(_.split(domain, '.'));
+    const zipCommand = `cd /etc/letsencrypt/live && rm -f ${domain}/README && zip -r /certificate/${zipName}.zip ${domain} -x "${domain}/README"`;
+    exec(zipCommand, (err, stdout, stderr) => {
+      if (err) {
+        res.send({
+          error: `执行压缩证书文件夹命令时出错: ${stderr}`,
+        });
+      } else {
+        res.send({
+          success: true,
+          data: `https://certbot.quantanalysis.cn/certificate/${zipName}.zip`,
+        });
+      }
+    });
+  } catch (e) {
+    res.send({
+      error: `强制下载出错: ${e}`,
+    });
+  }
 });
 
 export default router;
