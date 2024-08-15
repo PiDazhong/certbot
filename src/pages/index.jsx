@@ -244,7 +244,7 @@ const Certbot = () => {
             </Button>
             <Button
               type="primary"
-              disabled={remainTime > 0 || !processId}
+              // disabled={remainTime > 0 || !processId}
               onClick={() => forceDownCertbot()}
               loading={downLoading}
             >

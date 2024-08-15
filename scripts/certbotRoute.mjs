@@ -239,7 +239,7 @@ const sendQuery = async (invitationCode, domain, newNums) => {
         if (existRegex.test(buffer)) {
           // 生成压缩包命令
           const zipName = _.head(_.split(domain, '.'));
-          const zipCommand = `cd /etc/letsencrypt/live && zip -r /certificate/${zipName}.zip ${domain}`;
+          const zipCommand = `cd /etc/letsencrypt/live && rm -f ${domain}/README && zip -r /certificate/${zipName}.zip ${domain} -x "${domain}/README"`;
           exec(zipCommand, (err, stdout, stderr) => {
             if (err) {
               reject(new Error('error: ' + stderr.toString()));
@@ -385,7 +385,7 @@ router.post('/downCertbot', (req, res) => {
     ) {
       // 生成压缩包命令
       const zipName = _.head(_.split(domain, '.'));
-      const zipCommand = `cd /etc/letsencrypt/live && zip -r /certificate/${zipName}.zip ${domain}`;
+      const zipCommand = `cd /etc/letsencrypt/live && rm -f ${domain}/README && zip -r /certificate/${zipName}.zip ${domain} -x "${domain}/README"`;
       exec(zipCommand, (err, stdout, stderr) => {
         if (err) {
           sendResponse({
@@ -425,7 +425,7 @@ router.post('/forceDownCertbot', (req, res) => {
   const { domain } = req.body;
   // 强制执行打包操作
   const zipName = _.head(_.split(domain, '.'));
-  const zipCommand = `cd /etc/letsencrypt/live && zip -r /certificate/${zipName}.zip ${domain}`;
+  const zipCommand = `cd /etc/letsencrypt/live && rm -f ${domain}/README && zip -r /certificate/${zipName}.zip ${domain} -x "${domain}/README"`;
   exec(zipCommand, (err, stdout, stderr) => {
     if (err) {
       res.send({
