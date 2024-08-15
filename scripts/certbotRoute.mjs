@@ -247,7 +247,7 @@ const sendQuery = async (invitationCode, domain, newNums) => {
               resolve({
                 success: true,
                 data: {
-                  existUrl: `https://certbot.quantanalysis.cn/certificate/${zipName}.zip`,
+                  existUrl: `https://certificate.quantanalysis.cn/certificate/${zipName}.zip`,
                 },
               });
             }
@@ -406,7 +406,7 @@ router.post('/downCertbot', (req, res) => {
         } else {
           sendResponse({
             success: true,
-            data: `https://certbot.quantanalysis.cn/certificate/${zipName}.zip`,
+            data: `https://certificate.quantanalysis.cn/certificate/${zipName}.zip`,
           });
         }
       });
@@ -452,7 +452,7 @@ router.post('/forceDownCertbot', (req, res) => {
       } else {
         res.send({
           success: true,
-          data: `https://certbot.quantanalysis.cn/certificate/${zipName}.zip`,
+          data: `https://certificate.quantanalysis.cn/certificate/${zipName}.zip`,
         });
       }
     });
