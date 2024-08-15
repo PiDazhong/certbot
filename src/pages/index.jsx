@@ -150,7 +150,7 @@ const Certbot = () => {
       setDownLoading,
     );
     if (success) {
-      console.log('data', data);
+      console.log('下载地址', data);
       downZip(data);
     }
   };
@@ -166,7 +166,7 @@ const Certbot = () => {
       setDownLoading,
     );
     if (success) {
-      console.log('data', data);
+      console.log('下载地址', data);
       downZip(data);
     }
   };
