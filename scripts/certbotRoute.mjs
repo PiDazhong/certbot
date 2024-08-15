@@ -4,6 +4,7 @@
 import express from 'express';
 import { exec } from 'child_process';
 import dayjs from 'dayjs';
+import _ from 'lodash';
 
 import { DB_NAME, isProd, runSql, sshConfig } from './constsES5.mjs';
 
@@ -368,12 +369,24 @@ router.post('/downCertbot', (req, res) => {
 
     // 正则检测 "Successfully received certificate" 的提示
     const successRegex = /Successfully received certificate/i;
+    const successRegex2 = new RegExp(
+      `Writing certificate to \\/etc\\/letsencrypt\\/live\\/${domain}`,
+      'i',
+    );
+    const successRegex3 = new RegExp(
+      `\\/etc\\/letsencrypt\\/live\\/${domain}`,
+      'i',
+    );
     const existRegex = /You have an existing certificate/i;
-    if (successRegex.test(buffer) || existRegex.test(buffer)) {
+    if (
+      successRegex.test(buffer) ||
+      successRegex2.test(buffer) ||
+      successRegex3.test(buffer) ||
+      existRegex.test(buffer)
+    ) {
       // 生成压缩包命令
-      const destinationPath = '/icons/Certificate';
-      const folderPath = `/etc/letsencrypt/live`;
-      const zipCommand = `cd ${folderPath} && zip -r ${destinationPath}/${processId}.zip ${domain}`;
+      const zipName = _.head(_.split(domain, '.'));
+      const zipCommand = `cd /etc/letsencrypt/live && zip -r /certificate/${zipName}.zip ${domain}`;
       exec(zipCommand, (err, stdout, stderr) => {
         if (err) {
           sendResponse({
@@ -382,7 +395,7 @@ router.post('/downCertbot', (req, res) => {
         } else {
           sendResponse({
             success: true,
-            data: `https://certbot.quantanalysis.cn${destinationPath}/${processId}.zip`,
+            data: `https://certbot.quantanalysis.cn/certificate/${zipName}.zip`,
           });
         }
       });
@@ -405,6 +418,26 @@ router.post('/downCertbot', (req, res) => {
     // 无论如何，确保进程被杀死并清理资源
     child.kill();
     delete globalConn[processId];
+  });
+});
+
+// 开始 强制打包 接口
+router.post('/forceDownCertbot', (req, res) => {
+  const { domain } = req.body;
+  // 强制执行打包操作
+  const zipName = _.head(_.split(domain, '.'));
+  const zipCommand = `cd /etc/letsencrypt/live && zip -r /certificate/${zipName}.zip ${domain}`;
+  exec(zipCommand, (err, stdout, stderr) => {
+    if (err) {
+      res.send({
+        error: `执行压缩证书文件夹命令时出错: ${stderr}`,
+      });
+    } else {
+      res.send({
+        success: true,
+        data: `https://certbot.quantanalysis.cn/certificate/${zipName}.zip`,
+      });
+    }
   });
 });
 

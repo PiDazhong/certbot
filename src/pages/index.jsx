@@ -155,6 +155,22 @@ const Certbot = () => {
     }
   };
 
+  // 强制下载证书
+  const forceDownCertbot = async () => {
+    const { success, data } = await fetchRequest(
+      '/mysql/forceDownCertbot',
+      'post',
+      {
+        domain,
+      },
+      setDownLoading,
+    );
+    if (success) {
+      console.log('data', data);
+      downZip(data);
+    }
+  };
+
   return (
     <div className="certbot-page">
       <div className="certbot-page-content">
@@ -190,23 +206,6 @@ const Certbot = () => {
           </div>
         </div>
         <div className="line-item">
-          <div className="line-item-label"></div>
-          <div className="line-item-content">
-            <Tooltip
-              title={!(remainNums > 0) && '请填写邀请码并且测试邀请码可用次数'}
-            >
-              <Button
-                type="primary"
-                disabled={!(remainNums > 0)}
-                onClick={() => applyCertbot()}
-                loading={applyLoading}
-              >
-                点击申请
-              </Button>
-            </Tooltip>
-          </div>
-        </div>
-        <div className="line-item">
           <div className="line-item-label">下载冷却</div>
           <div className="line-item-content">
             <div className="text-content">剩余冷却时间：{remainTime}</div>
@@ -223,6 +222,18 @@ const Certbot = () => {
         <div className="line-item">
           <div className="line-item-label"></div>
           <div className="line-item-content">
+            <Tooltip
+              title={!(remainNums > 0) && '请填写邀请码并且测试邀请码可用次数'}
+            >
+              <Button
+                type="primary"
+                disabled={!(remainNums > 0)}
+                onClick={() => applyCertbot()}
+                loading={applyLoading}
+              >
+                点击申请
+              </Button>
+            </Tooltip>
             <Button
               type="primary"
               disabled={remainTime > 0 || !processId}
@@ -231,6 +242,17 @@ const Certbot = () => {
             >
               点击下载
             </Button>
+            <Button
+              type="primary"
+              disabled={remainTime > 0 || !processId}
+              onClick={() => forceDownCertbot()}
+              loading={downLoading}
+            >
+              强制下载
+            </Button>
+            <Tooltip title="有时候可能证书成功生成了，但是接口没有正确返回成功信息，点击强制下载试下即可">
+              <InfoCircleOutlined />
+            </Tooltip>
           </div>
         </div>
       </div>
