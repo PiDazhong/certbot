@@ -238,9 +238,8 @@ const sendQuery = async (invitationCode, domain, newNums) => {
         const existRegex = /You have an existing certificate/i;
         if (existRegex.test(buffer)) {
           // 生成压缩包命令
-          const destinationPath = '/icons/Certificate';
-          const folderPath = `/etc/letsencrypt/live`;
-          const zipCommand = `cd ${folderPath} && zip -r ${destinationPath}/${processId}.zip ${domain}`;
+          const zipName = _.head(_.split(domain, '.'));
+          const zipCommand = `cd /etc/letsencrypt/live && zip -r /certificate/${zipName}.zip ${domain}`;
           exec(zipCommand, (err, stdout, stderr) => {
             if (err) {
               reject(new Error('error: ' + stderr.toString()));
@@ -248,7 +247,7 @@ const sendQuery = async (invitationCode, domain, newNums) => {
               resolve({
                 success: true,
                 data: {
-                  existUrl: `https://certbot.quantanalysis.cn${destinationPath}/${processId}.zip`,
+                  existUrl: `https://certbot.quantanalysis.cn/certificate/${zipName}.zip`,
                 },
               });
             }
