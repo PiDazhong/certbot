@@ -36,8 +36,8 @@ const Certbot = () => {
           invitationCode,
         },
       );
+      message.success(`邀请码剩余可用次数：${remainNums}`);
       if (remainNums > 0) {
-        message.success(`邀请码剩余可用次数：${remainNums}`);
         setRemainNums(remainNums);
       } else {
         setRemainNums(0);
