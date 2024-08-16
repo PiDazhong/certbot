@@ -29,16 +29,16 @@ const Certbot = () => {
       return;
     }
     try {
-      const { data: remainNums } = await fetchRequest(
+      const { success, data: remainNums } = await fetchRequest(
         '/mysql/getRemainNums',
         'post',
         {
           invitationCode,
         },
       );
-      message.success(`邀请码剩余可用次数：${remainNums}`);
-      if (remainNums > 0) {
-        setRemainNums(remainNums);
+      if (success) {
+        message.success(`邀请码剩余可用次数：${remainNums}`);
+        setRemainNums(remainNums || 0);
       } else {
         setRemainNums(0);
       }
