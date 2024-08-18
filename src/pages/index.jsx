@@ -12,7 +12,7 @@ const Certbot = () => {
   // 域名
   const [domain, setDomain] = useState('example.com');
   // 冷却时间
-  const [remainTime, setRemainTime] = useState(300);
+  const [remainTime, setRemainTime] = useState(120);
   // 进程id
   const [processId, setProcessId] = useState(undefined);
   // 申请 loading
@@ -55,7 +55,7 @@ const Certbot = () => {
       message.warning('域名不合法');
       return;
     }
-    setRemainTime(300);
+    setRemainTime(120);
     try {
       const { success, data } = await fetchRequest(
         '/mysql/applyCertbot',
