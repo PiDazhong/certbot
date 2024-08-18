@@ -17,25 +17,29 @@ const closeCertbot = async () => {
   return new Promise((resolve, reject) => {
     exec('ps aux | grep certbot', (err, stdout, stderr) => {
       if (err) {
-        reject(new Error('运行 ps aux | grep certbot 失败: ' + err.message));
-        return;
+        reject(new Error('运行 ps aux | grep certbot 失败: ' + String(stderr)));
       }
       const lines = stdout.trim().split('\n');
+      let found = false;
+      let pid = '';
       for (const line of lines) {
         if (line.includes('sudo certbot')) {
           const parts = line.trim().split(/\s+/);
-          const pid = parts[1];
-
-          console.log(`找到了正在运行的certbot进程: ${pid}`);
-          try {
-            process.kill(pid, 'SIGTERM');
-            resolve(true);
-          } catch (error) {
-            reject(new Error('进程清除失败: ' + err.message));
-            return;
-          }
+          pid = parts[1];
+          found = true;
           break;
         }
+      }
+      if (found) {
+        console.log(`找到了正在运行的certbot进程: ${pid}`);
+        exec(`kill -9 ${pid}`, (error, stdout, stderr) => {
+          if (error) {
+            reject(new Error('进程清除失败: ' + String(stderr)));
+          }
+          resolve(true);
+        });
+      } else {
+        resolve(true);
       }
     });
   });
@@ -47,9 +51,7 @@ router.post('/getRemainNums', async (req, res) => {
 
   try {
     const runCloseCertbot = await closeCertbot();
-    if (!runCloseCertbot) {
-      return;
-    }
+
     const querySql = `
       select nums from ${DB_NAME}.invitation_code_table
       where 1=1 
@@ -70,7 +72,7 @@ router.post('/getRemainNums', async (req, res) => {
     }
   } catch (e) {
     res.send({
-      error: '查询失败',
+      error: '查询失败' + e,
     });
   }
 });
