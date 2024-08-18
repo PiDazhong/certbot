@@ -151,7 +151,7 @@ const Certbot = () => {
     );
     if (success) {
       console.log('下载地址', data);
-      downZip(data);
+      message.success(`下载地址, ${data}`);
     }
   };
 
@@ -167,7 +167,7 @@ const Certbot = () => {
     );
     if (success) {
       console.log('下载地址', data);
-      downZip(data);
+      message.success(`下载地址, ${data}`);
     }
   };
 
