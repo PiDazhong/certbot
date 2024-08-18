@@ -6,7 +6,14 @@ import { exec } from 'child_process';
 import dayjs from 'dayjs';
 import _ from 'lodash';
 
-import { DB_NAME, isProd, runSql, sshConfig } from './constsES5.mjs';
+import {
+  DB_NAME,
+  isProd,
+  runSql,
+  insertOrUpdateAfterQuery,
+  sshConfig,
+  authenticateJWT,
+} from './constsES5.mjs';
 
 const router = express.Router();
 
@@ -62,6 +69,46 @@ router.get('/getApplyNums', async (req, res) => {
       data: count,
     });
   });
+});
+
+// 随机生成 邀请码
+router.get('/createInvitationCode', authenticateJWT, async (req, res) => {
+  try {
+    // 生成一个随机数
+    const getRandomStr = Math.random().toString(36).substring(2, 10);
+    // 再生成一个随机数
+    const getRandomStr2 = Math.random().toString(36).substring(2, 6);
+
+    const invitationCode = `${getRandomStr}_${getRandomStr2}`;
+
+    const querySql = `
+      select 1 from ${DB_NAME}.invitation_code_table
+      where 1=1 
+      and code='${invitationCode}'
+      limit 1
+    `;
+    const updateSql = `
+      update ${DB_NAME}.invitation_code_table
+      set nums = 1
+      where 1=1 
+      and code='${invitationCode}'
+    `;
+    const insertSql = `
+      insert into ${DB_NAME}.invitation_code_table
+      (code, nums)
+      values
+      ('${invitationCode}', 1)
+    `;
+    await insertOrUpdateAfterQuery(querySql, updateSql, insertSql);
+    res.send({
+      success: true,
+      data: invitationCode,
+    });
+  } catch (e) {
+    res.send({
+      error: '生成邀请码失败' + e,
+    });
+  }
 });
 
 // 获取 板块预览页面的分布 的接口

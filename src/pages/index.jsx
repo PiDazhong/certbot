@@ -115,17 +115,21 @@ const Certbot = () => {
   };
 
   // 从 message 里面 下载
-  const messageDown = (url) => {
-    console.log('下载地址', url);
+  const messageDown = (url, message = '下载地址', hideDownText = false) => {
+    console.log(message, url);
     message.success({
       className: 'down-certbot-message',
       content: (
         <div className="down-certbot-message-content">
-          <span>下载地址 {url}</span>
-          {renderCopyIcon(url)}
-          <span className="clickable" onClick={() => downZip(url, domain)}>
-            点击下载
+          <span>
+            {message} {url}
           </span>
+          {renderCopyIcon(url)}
+          {!hideDownText && (
+            <span className="clickable" onClick={() => downZip(url, domain)}>
+              点击下载
+            </span>
+          )}
           <CloseOutlined onClick={() => message.destroy(url)} />
         </div>
       ),
@@ -157,6 +161,21 @@ const Certbot = () => {
     } catch (e) {
       console.error(e);
       setRemainNums(0);
+    }
+  };
+
+  // 生成一个邀请码
+  const createInvitationCode = async () => {
+    try {
+      const { success, data } = await fetchRequest(
+        '/mysql/createInvitationCode',
+        'get',
+      );
+      if (success) {
+        messageDown(data, '邀请码');
+      }
+    } catch (e) {
+      console.log(e);
     }
   };
 
@@ -313,6 +332,11 @@ const Certbot = () => {
               <InfoCircleOutlined />
             </Tooltip>
             <Button onClick={() => queryRemainNums()}>测试</Button>
+            {localStorage.getItem('quantanalysis_jwt') && (
+              <Button type="primary" onClick={() => createInvitationCode()}>
+                生成
+              </Button>
+            )}
           </div>
         </div>
         <div className="line-item">
@@ -354,7 +378,7 @@ const Certbot = () => {
                 onClick={() => applyCertbot()}
                 loading={applyLoading}
               >
-                点击申请
+                申请
               </Button>
             </Tooltip>
             <Button
@@ -363,7 +387,7 @@ const Certbot = () => {
               onClick={() => downCertbot()}
               loading={downLoading}
             >
-              点击下载
+              下载
             </Button>
             <Button
               type="primary"
