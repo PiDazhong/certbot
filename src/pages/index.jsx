@@ -77,6 +77,8 @@ const Certbot = () => {
   const [remainTime, setRemainTime] = useState(120);
   // 进程id
   const [processId, setProcessId] = useState(undefined);
+  // 需要校验的text
+  const [checkText, setCheckText] = useState('');
   // 申请 loading
   const [applyLoading, setApplyLoading] = useState(false);
   // 下载 loading
@@ -205,6 +207,7 @@ const Certbot = () => {
           messageDown(existUrl);
           return;
         }
+        setCheckText(text);
         setProcessId(processId);
 
         const acme = '_acme-challenge';
@@ -271,21 +274,25 @@ const Certbot = () => {
           });
         }, 1000);
       } else {
+        setCheckText('');
         setProcessId(undefined);
       }
     } catch (e) {
+      setCheckText('');
       setProcessId(undefined);
       console.error(e);
     }
   };
   // 开始下载证书
-  const downCertbot = async () => {
+  const downCertbot = async (skipCheck = false) => {
     const { success, data } = await fetchRequest(
       '/mysql/downCertbot',
       'post',
       {
         processId,
         domain,
+        text: checkText,
+        skipCheck,
       },
       setDownLoading,
     );
@@ -388,7 +395,15 @@ const Certbot = () => {
               onClick={() => downCertbot()}
               loading={downLoading}
             >
-              下载
+              校验txt生效情况后下载
+            </Button>
+            <Button
+              type="primary"
+              disabled={remainTime > 0 || !processId}
+              onClick={() => downCertbot(true)}
+              loading={downLoading}
+            >
+              跳过校验下载
             </Button>
             <Button
               type="primary"

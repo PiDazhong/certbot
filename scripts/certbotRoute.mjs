@@ -9,6 +9,7 @@ import _ from 'lodash';
 import {
   DB_NAME,
   isProd,
+  delay,
   runSql,
   insertOrUpdateAfterQuery,
   sshConfig,
@@ -111,7 +112,7 @@ router.get('/createInvitationCode', authenticateJWT, async (req, res) => {
   }
 });
 
-// 获取 板块预览页面的分布 的接口
+// 获取 邀请码剩余次数 的接口
 router.post('/getRemainNums', async (req, res) => {
   const { invitationCode } = req.body;
 
@@ -426,9 +427,49 @@ router.post('/applyCertbot', async (req, res) => {
   }
 });
 
+// 判断 dns 的 txt 解析是否生效
+const checkDNS = async (domain, txtRecord) => {
+  return new Promise(async (resolve, reject) => {
+    const command = `nslookup -q=txt _acme-challenge.${domain}`;
+    try {
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          resolve(false);
+        }
+        if (stderr) {
+          resolve(false);
+        }
+        if (stdout.includes(txtRecord)) {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      });
+    } catch (error) {
+      resolve(false);
+    }
+  });
+};
+
+// 判断 10次 dns 的 txt 解析是否生效
+const checkDNSMultipleTimes = async (domain, txtRecord, attempts = 10) => {
+  let results = [];
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const result = await checkDNS(domain, txtRecord);
+      results.push(result);
+      // 延时 100 毫秒
+      await delay(100);
+    } catch (error) {
+      results.push(false);
+    }
+  }
+  return results;
+};
+
 // 开始证书的下载 接口
-router.post('/downCertbot', (req, res) => {
-  const { processId, domain } = req.body;
+router.post('/downCertbot', async (req, res) => {
+  const { processId, domain, text, skipCheck: skipInParam } = req.body;
 
   if (domain.includes('quantanalysis')) {
     return res.send({
@@ -436,101 +477,119 @@ router.post('/downCertbot', (req, res) => {
     });
   }
 
-  const child = globalConn[processId];
+  try {
+    const skipCheck = skipInParam === 'true' || skipInParam === true;
+    if (!skipCheck) {
+      // 下载之前，先 检查 10次 DNS 是否生效
+      const results = await checkDNSMultipleTimes(domain, text);
+      const dnsFailedCount = results.filter((result) => !result).length;
+      if (dnsFailedCount > 0) {
+        return res.send({
+          error: `10次 dns txt 记录解析，有 ${dnsFailedCount} 次失败，无法申请证书`,
+        });
+      }
+    }
 
-  if (!child) {
-    return res.send({
-      error: '无法找到对应的进程',
+    const child = globalConn[processId];
+
+    if (!child) {
+      return res.send({
+        error: '无法找到对应的进程',
+      });
+    }
+
+    // 继续向进程中发送输入
+    child.stdin.write('\n'); // 发送回车
+
+    let buffer = '';
+    let responseSent = false;
+
+    const sendResponse = (response) => {
+      if (!responseSent) {
+        responseSent = true;
+        res.send(response);
+        // 确保在发送响应后，正确关闭进程并清理资源
+        child.kill();
+        delete globalConn[processId];
+      }
+    };
+
+    child.stdout.on('data', (data) => {
+      const output = data.toString();
+      buffer += output;
+      console.log('STDOUT:', buffer);
+
+      // 正则检测 "verify the TXT record has been deployed" 的提示
+      const pressEnterRegex = /verify the TXT record has been deployed/i;
+      if (pressEnterRegex.test(buffer)) {
+        child.stdin.write('\n'); // 如果匹配到提示，则继续输入回车
+      }
+
+      // 正则检测 "Some challenges have failed" 的提示
+      const overRegex = /Some challenges have failed/i;
+      if (overRegex.test(buffer)) {
+        sendResponse({
+          error: `证书下载过程中发生错误: ${buffer}`,
+        });
+      }
+
+      // 正则检测 "Successfully received certificate" 的提示
+      const successRegex = /Successfully received certificate/i;
+      const successRegex2 = new RegExp(
+        `Writing certificate to \\/etc\\/letsencrypt\\/live\\/${domain}`,
+        'i',
+      );
+      const successRegex3 = new RegExp(
+        `\\/etc\\/letsencrypt\\/live\\/${domain}`,
+        'i',
+      );
+      const existRegex = /You have an existing certificate/i;
+      if (
+        successRegex.test(buffer) ||
+        successRegex2.test(buffer) ||
+        successRegex3.test(buffer) ||
+        existRegex.test(buffer)
+      ) {
+        // 生成压缩包命令
+        const zipName = _.head(_.split(domain, '.'));
+        const zipCommand = `cd /etc/letsencrypt/live && rm -f ${domain}/README && zip -r /certificate/${zipName}.zip ${domain} -x "${domain}/README"`;
+        exec(zipCommand, (err, stdout, stderr) => {
+          if (err) {
+            sendResponse({
+              error: `执行压缩证书文件夹命令时出错: ${stderr}`,
+            });
+          } else {
+            sendResponse({
+              success: true,
+              data: `https://certificate.quantanalysis.cn/certificate/${zipName}.zip`,
+            });
+          }
+        });
+      }
     });
-  }
 
-  // 继续向进程中发送输入
-  child.stdin.write('\n'); // 发送回车
+    child.stderr.on('data', (errData) => {
+      console.error('STDERR:', errData.toString());
+      sendResponse({
+        error: `发生错误: ${errData.toString()}`,
+      });
+    });
 
-  let buffer = '';
-  let responseSent = false;
-
-  const sendResponse = (response) => {
-    if (!responseSent) {
-      responseSent = true;
-      res.send(response);
-      // 确保在发送响应后，正确关闭进程并清理资源
+    child.on('close', (code) => {
+      if (!responseSent) {
+        sendResponse({
+          error: '未成功获取到证书下载的结果',
+        });
+      }
+      // 无论如何，确保进程被杀死并清理资源
       child.kill();
       delete globalConn[processId];
-    }
-  };
-
-  child.stdout.on('data', (data) => {
-    const output = data.toString();
-    buffer += output;
-    console.log('STDOUT:', buffer);
-
-    // 正则检测 "verify the TXT record has been deployed" 的提示
-    const pressEnterRegex = /verify the TXT record has been deployed/i;
-    if (pressEnterRegex.test(buffer)) {
-      child.stdin.write('\n'); // 如果匹配到提示，则继续输入回车
-    }
-
-    // 正则检测 "Some challenges have failed" 的提示
-    const overRegex = /Some challenges have failed/i;
-    if (overRegex.test(buffer)) {
-      sendResponse({
-        error: `证书下载过程中发生错误: ${buffer}`,
-      });
-    }
-
-    // 正则检测 "Successfully received certificate" 的提示
-    const successRegex = /Successfully received certificate/i;
-    const successRegex2 = new RegExp(
-      `Writing certificate to \\/etc\\/letsencrypt\\/live\\/${domain}`,
-      'i',
-    );
-    const successRegex3 = new RegExp(
-      `\\/etc\\/letsencrypt\\/live\\/${domain}`,
-      'i',
-    );
-    const existRegex = /You have an existing certificate/i;
-    if (
-      successRegex.test(buffer) ||
-      successRegex2.test(buffer) ||
-      successRegex3.test(buffer) ||
-      existRegex.test(buffer)
-    ) {
-      // 生成压缩包命令
-      const zipName = _.head(_.split(domain, '.'));
-      const zipCommand = `cd /etc/letsencrypt/live && rm -f ${domain}/README && zip -r /certificate/${zipName}.zip ${domain} -x "${domain}/README"`;
-      exec(zipCommand, (err, stdout, stderr) => {
-        if (err) {
-          sendResponse({
-            error: `执行压缩证书文件夹命令时出错: ${stderr}`,
-          });
-        } else {
-          sendResponse({
-            success: true,
-            data: `https://certificate.quantanalysis.cn/certificate/${zipName}.zip`,
-          });
-        }
-      });
-    }
-  });
-
-  child.stderr.on('data', (errData) => {
-    console.error('STDERR:', errData.toString());
-    sendResponse({
-      error: `发生错误: ${errData.toString()}`,
     });
-  });
-
-  child.on('close', (code) => {
-    if (!responseSent) {
-      sendResponse({
-        error: '未成功获取到证书下载的结果',
-      });
-    }
-    // 无论如何，确保进程被杀死并清理资源
-    child.kill();
-    delete globalConn[processId];
-  });
+  } catch (e) {
+    res.send({
+      error: '下载失败' + String(e),
+    });
+  }
 });
 
 // 开始 强制打包 接口
