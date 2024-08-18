@@ -186,7 +186,7 @@ const Certbot = () => {
   };
 
   // 开始申请证书
-  const applyCertbot = async () => {
+  const applyCertbot = async (force = false) => {
     const regex = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
     if (!regex.test(domain)) {
       message.warning('域名不合法');
@@ -195,7 +195,7 @@ const Certbot = () => {
     setRemainTime(120);
     try {
       const { success, data } = await fetchRequest(
-        '/mysql/applyCertbot',
+        force ? '/mysql/applyCertbotForce' : '/mysql/applyCertbot',
         'post',
         {
           invitationCode,
@@ -398,6 +398,16 @@ const Certbot = () => {
                 申请
               </Button>
             </Tooltip>
+            {localStorage.getItem('quantanalysis_jwt') && (
+              <Button
+                type="primary"
+                disabled={!(remainNums > 0)}
+                onClick={() => applyCertbot(true)}
+                loading={applyLoading}
+              >
+                强制申请
+              </Button>
+            )}
             <Button
               type="primary"
               disabled={remainTime > 0 || !processId}

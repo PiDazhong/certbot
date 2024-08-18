@@ -20,6 +20,25 @@ const router = express.Router();
 
 let globalConn = {};
 
+// 最后的打包命令
+const generateZipCommand = (domain) => {
+  const zipName = _.head(_.split(domain, '.'));
+  const now = dayjs().format('YYYY-MM-DD_HH:mm:ss');
+
+  const zipCommand = `
+    sh -c "
+      cd /etc/letsencrypt/live/${domain} && 
+      echo 'Created on ${now}' > ${now}.txt && 
+      rm -f README && 
+      cd .. && 
+      zip -r /certificate/${zipName}.zip ${domain} -x '${domain}/README' && 
+      cd ${domain} && 
+      rm -f ${now}.txt
+    " 
+  `;
+  return zipCommand;
+};
+
 // 关闭 现有的 certbot 进程
 const closeCertbot = async () => {
   return new Promise((resolve, reject) => {
@@ -278,7 +297,7 @@ const executeCertbotCommand = (conn, cmd, domain, newNums, processId) => {
   });
 };
 
-const sendQuery = async (invitationCode, domain, newNums) => {
+const sendQuery = async (invitationCode, domain, newNums, force) => {
   return new Promise(async (resolve, reject) => {
     const processId = Date.now(); // 获取当前时间戳作为 processId
 
@@ -314,7 +333,7 @@ const sendQuery = async (invitationCode, domain, newNums) => {
       });
 
       // 启动定时器，每秒检查一次缓存的数据
-      const timer = setInterval(() => {
+      const timer = setInterval(async () => {
         const regex = /with the following value:\s+([a-zA-Z0-9_-]+)/i;
         const match = buffer.match(regex);
         if (match && match[1]) {
@@ -338,22 +357,49 @@ const sendQuery = async (invitationCode, domain, newNums) => {
         }
 
         const existRegex = /You have an existing certificate/i;
+        const renewRegex = /Renew & replac/i;
+        const successRegex = /Successfully received certificate/i;
         if (existRegex.test(buffer)) {
-          // 生成压缩包命令
-          const zipName = _.head(_.split(domain, '.'));
-          const zipCommand = `cd /etc/letsencrypt/live && rm -f ${domain}/README && zip -r /certificate/${zipName}.zip ${domain} -x "${domain}/README"`;
-          exec(zipCommand, (err, stdout, stderr) => {
-            if (err) {
-              reject(new Error('error: ' + stderr.toString()));
-            } else {
-              resolve({
-                success: true,
-                data: {
-                  existUrl: `https://certificate.quantanalysis.cn/certificate/${zipName}.zip`,
-                },
+          if (force && renewRegex.test(buffer)) {
+            // 继续向进程中发送输入
+            child.stdin.write('2'); // 发送 2
+            await delay(10);
+            child.stdin.write('\n'); // 发送回车
+            if (successRegex.test(buffer)) {
+              // 生成压缩包命令
+              const zipName = _.head(_.split(domain, '.'));
+              const zipCommand = generateZipCommand(domain);
+              exec(zipCommand, (err, stdout, stderr) => {
+                if (err) {
+                  reject(new Error('error: ' + stderr.toString()));
+                } else {
+                  resolve({
+                    success: true,
+                    data: {
+                      existUrl: `https://certificate.quantanalysis.cn/certificate/${zipName}.zip`,
+                      message: '强制重新生成证书成功',
+                    },
+                  });
+                }
               });
             }
-          });
+          } else {
+            // 生成压缩包命令
+            const zipName = _.head(_.split(domain, '.'));
+            const zipCommand = generateZipCommand(domain);
+            exec(zipCommand, (err, stdout, stderr) => {
+              if (err) {
+                reject(new Error('error: ' + stderr.toString()));
+              } else {
+                resolve({
+                  success: true,
+                  data: {
+                    existUrl: `https://certificate.quantanalysis.cn/certificate/${zipName}.zip`,
+                  },
+                });
+              }
+            });
+          }
         }
       }, 1000);
 
@@ -412,6 +458,59 @@ router.post('/applyCertbot', async (req, res) => {
         res.send(result);
       } else {
         const result = await sendQuery(invitationCode, domain, newNums);
+        res.send(result);
+      }
+    } else {
+      res.send({
+        error: `邀请码可用次数${nums}`,
+      });
+    }
+  } catch (e) {
+    console.log('e', e);
+    res.send({
+      error: `申请失败 ${e}`,
+    });
+  }
+});
+
+// 开始证书的 强制申请 的接口   这个接口会将现有的证书刷新掉
+router.post('/applyCertbotForce', authenticateJWT, async (req, res) => {
+  const { invitationCode, domain } = req.body;
+
+  if (domain.includes('quantanalysis')) {
+    return res.send({
+      error: '本站域名不支持证书申请',
+    });
+  }
+
+  try {
+    const querySql = `
+      select nums from ${DB_NAME}.invitation_code_table
+      where 1=1 
+      and code='${invitationCode}'
+    `;
+    const nums = (await runSql(querySql))[0]?.nums;
+
+    if (nums > 0) {
+      const newNums = nums - 1;
+      const updateSql = `
+        update ${DB_NAME}.invitation_code_table
+        set nums=${newNums}
+        where 1=1 
+        and code='${invitationCode}'
+      `;
+      await runSql(updateSql);
+      const now = dayjs().format('YYYY-MM-DD HH:mm:ss');
+      const insertLogSql = `  
+        insert into ${DB_NAME}.use_log_table (code, time) values ('${invitationCode}', '${now}')
+      `;
+      await runSql(insertLogSql);
+
+      if (!isProd) {
+        const result = await sendSSHQuery(invitationCode, domain, newNums);
+        res.send(result);
+      } else {
+        const result = await sendQuery(invitationCode, domain, newNums, true);
         res.send(result);
       }
     } else {
@@ -552,7 +651,7 @@ router.post('/downCertbot', async (req, res) => {
       ) {
         // 生成压缩包命令
         const zipName = _.head(_.split(domain, '.'));
-        const zipCommand = `cd /etc/letsencrypt/live && rm -f ${domain}/README && zip -r /certificate/${zipName}.zip ${domain} -x "${domain}/README"`;
+        const zipCommand = generateZipCommand(domain);
         exec(zipCommand, (err, stdout, stderr) => {
           if (err) {
             sendResponse({
@@ -603,7 +702,7 @@ router.post('/forceDownCertbot', (req, res) => {
   try {
     // 强制执行打包操作
     const zipName = _.head(_.split(domain, '.'));
-    const zipCommand = `cd /etc/letsencrypt/live && rm -f ${domain}/README && zip -r /certificate/${zipName}.zip ${domain} -x "${domain}/README"`;
+    const zipCommand = generateZipCommand(domain);
     exec(zipCommand, (err, stdout, stderr) => {
       if (err) {
         res.send({
