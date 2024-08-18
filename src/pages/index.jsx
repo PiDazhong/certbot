@@ -83,6 +83,8 @@ const Certbot = () => {
   const [applyLoading, setApplyLoading] = useState(false);
   // 下载 loading
   const [downLoading, setDownLoading] = useState(false);
+  // 能否强制下载证书
+  const [canForceDown, setCanForceDown] = useState(false);
   // 冷却时间计时器
   const remainTimeRef = useRef(null);
 
@@ -143,6 +145,7 @@ const Certbot = () => {
 
   // 查询邀请码剩余可用次数
   const queryRemainNums = async () => {
+    setCanForceDown(false);
     if (!invitationCode || !invitationCode.includes('_')) {
       message.warning('邀请码不合法');
       return;
@@ -285,19 +288,25 @@ const Certbot = () => {
   };
   // 开始下载证书
   const downCertbot = async (skipCheck = false) => {
-    const { success, data } = await fetchRequest(
-      '/mysql/downCertbot',
-      'post',
-      {
-        processId,
-        domain,
-        text: checkText,
-        skipCheck,
-      },
-      setDownLoading,
-    );
-    if (success) {
-      messageDown(data);
+    try {
+      const { success, data } = await fetchRequest(
+        '/mysql/downCertbot',
+        'post',
+        {
+          processId,
+          domain,
+          text: checkText,
+          skipCheck,
+        },
+        setDownLoading,
+      );
+      if (success) {
+        messageDown(data);
+      }
+    } catch (e) {
+      console.log('e', e);
+    } finally {
+      setCanForceDown(true);
     }
   };
 
@@ -375,7 +384,7 @@ const Certbot = () => {
           </div>
         </div>
         <div className="line-item">
-          <div className="line-item-label"></div>
+          <div className="line-item-label short-label"></div>
           <div className="line-item-content">
             <Tooltip
               title={!(remainNums > 0) && '请填写邀请码并且测试邀请码可用次数'}
@@ -395,7 +404,7 @@ const Certbot = () => {
               onClick={() => downCertbot()}
               loading={downLoading}
             >
-              校验txt生效情况后下载
+              校验dns-txt解析并下载
             </Button>
             <Button
               type="primary"
@@ -403,13 +412,12 @@ const Certbot = () => {
               onClick={() => downCertbot(true)}
               loading={downLoading}
             >
-              跳过校验下载
+              跳过校验直接下载
             </Button>
             <Button
               type="primary"
-              // disabled={remainTime > 0 || !processId}
+              disabled={!canForceDown}
               onClick={() => forceDownCertbot()}
-              loading={downLoading}
             >
               强制下载
             </Button>

@@ -485,7 +485,7 @@ router.post('/downCertbot', async (req, res) => {
       const dnsFailedCount = results.filter((result) => !result).length;
       if (dnsFailedCount > 0) {
         return res.send({
-          error: `10次 dns txt 记录解析，有 ${dnsFailedCount} 次失败，无法申请证书`,
+          error: `后台进行了10次dns-txt记录解析验证，有 ${dnsFailedCount} 次失败，请检查 dns 解析记录`,
         });
       }
     }

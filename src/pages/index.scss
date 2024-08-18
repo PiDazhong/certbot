@@ -61,6 +61,10 @@
       color: var(--black85);
       text-align: right;
       margin-right: 12px;
+
+      &.short-label {
+        width: 80px;
+      }
     }
 
     .line-item-content {
