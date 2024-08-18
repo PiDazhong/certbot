@@ -118,7 +118,7 @@
   .down-certbot-message-content {
     .clickable {
       cursor: pointer;
-      color: var(--brand);
+      color: var(--brand) !important;
       margin-left: 12px;
     }
   }
