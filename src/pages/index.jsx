@@ -243,7 +243,7 @@ const Certbot = () => {
               <span>
                 <span className="line-start">{'>.'}</span>
                 txt值解析成功后，才可以点击申请下载证书 (请在
-                5分钟后、20分钟以内，点击下载申请，否则此次申请进程将被终止)
+                解析成功后、20分钟以内，点击下载申请，否则此次申请进程将被终止)
               </span>
               <span>
                 <span className="line-start">{'>.'}</span>邀请码剩余可用次数：
