@@ -22,6 +22,39 @@ const Certbot = () => {
   // 冷却时间计时器
   const remainTimeRef = useRef(null);
 
+  const downZip = (url) => {
+    // 创建一个新的 a 标签
+    const a = document.createElement('a');
+    // 设置 a 标签的 href 为传入的下载链接
+    a.href = url;
+    // 设置下载文件的名称
+    a.download = `${domain}.zip`;
+    // 将 a 标签添加到文档中
+    document.body.appendChild(a);
+    // 触发 a 标签的点击事件，开始下载
+    a.click();
+    // 下载完成后移除 a 标签
+    document.body.removeChild(a);
+  };
+
+  // 从 message 里面 下载
+  const messageDown = (url) => {
+    console.log('下载地址', url);
+    message.success({
+      className: 'down-certbot-message',
+      content: (
+        <div className="down-certbot-message-content">
+          <span>下载地址 {url}</span>
+          <span className="clickable" onClick={() => downZip(url)}>
+            点击下载
+          </span>
+        </div>
+      ),
+      key: url,
+      duration: 0,
+    });
+  };
+
   // 查询邀请码剩余可用次数
   const queryRemainNums = async () => {
     if (!invitationCode || !invitationCode.includes('_')) {
@@ -70,7 +103,7 @@ const Certbot = () => {
         const { text, newNums, processId, existUrl } = data;
         if (existUrl) {
           message.warning('域名已存在证书地址，无需重新申请');
-          downZip(existUrl);
+          messageDown(existUrl);
           return;
         }
         setProcessId(processId);
@@ -122,22 +155,6 @@ const Certbot = () => {
       console.error(e);
     }
   };
-
-  const downZip = (url) => {
-    // 创建一个新的 a 标签
-    const a = document.createElement('a');
-    // 设置 a 标签的 href 为传入的下载链接
-    a.href = url;
-    // 设置下载文件的名称
-    a.download = `${domain}.zip`;
-    // 将 a 标签添加到文档中
-    document.body.appendChild(a);
-    // 触发 a 标签的点击事件，开始下载
-    a.click();
-    // 下载完成后移除 a 标签
-    document.body.removeChild(a);
-  };
-
   // 开始下载证书
   const downCertbot = async () => {
     const { success, data } = await fetchRequest(
@@ -150,8 +167,7 @@ const Certbot = () => {
       setDownLoading,
     );
     if (success) {
-      console.log('下载地址', data);
-      message.success(`下载地址, ${data}`);
+      messageDown(data);
     }
   };
 
@@ -166,8 +182,7 @@ const Certbot = () => {
       setDownLoading,
     );
     if (success) {
-      console.log('下载地址', data);
-      message.success(`下载地址, ${data}`);
+      messageDown(data);
     }
   };
 

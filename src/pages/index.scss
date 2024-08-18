@@ -113,3 +113,13 @@
     }
   }
 }
+
+.down-certbot-message {
+  .down-certbot-message-content {
+    .clickable {
+      cursor: pointer;
+      color: var(--brand);
+      margin-left: 12px;
+    }
+  }
+}
