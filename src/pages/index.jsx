@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button, Input, message, Tooltip } from 'antd';
+import _ from 'lodash';
 import {
   InfoCircleOutlined,
   CloseOutlined,
@@ -115,14 +116,14 @@ const Certbot = () => {
   };
 
   // 从 message 里面 下载
-  const messageDown = (url, message = '下载地址', hideDownText = false) => {
-    console.log(message, url);
+  const messageDown = (url, label = '下载地址', hideDownText = false) => {
+    console.log(label, url);
     message.success({
       className: 'down-certbot-message',
       content: (
         <div className="down-certbot-message-content">
           <span>
-            {message} {url}
+            {label} {url}
           </span>
           {renderCopyIcon(url)}
           {!hideDownText && (
@@ -172,7 +173,7 @@ const Certbot = () => {
         'get',
       );
       if (success) {
-        messageDown(data, '邀请码');
+        messageDown(data, '邀请码', true);
       }
     } catch (e) {
       console.log(e);
