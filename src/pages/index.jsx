@@ -297,7 +297,9 @@ const Certbot = () => {
           <div className="title-item-label">SSL证书申请</div>
         </div>
         <div className="success-result-item">
-          当前已经成功为 {successCount} 个域名成功申请证书
+          当前已为
+          <span className="success-count">{successCount}</span>
+          个域名成功申请证书
         </div>
         <div className="line-item">
           <div className="line-item-label">邀请码</div>

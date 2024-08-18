@@ -41,6 +41,14 @@
     align-items: center;
     justify-content: center;
     color: var(--orange80);
+    font-size: 14px;
+
+    .success-count {
+      font-size: 15px;
+      color: var(--orange);
+      font-weight: bold;
+      margin: 0 6px;
+    }
   }
 
   .line-item {
