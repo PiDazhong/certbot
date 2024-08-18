@@ -47,6 +47,23 @@ const closeCertbot = async () => {
   });
 };
 
+// 获取 zip 包的数量
+router.get('/getApplyNums', async (req, res) => {
+  const command = 'ls /certificate/*.zip 2>/dev/null | wc -l';
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      return res.send({
+        error: '查询失败' + String(stderr),
+      });
+    }
+    const count = parseInt(stdout.trim(), 10);
+    return res.send({
+      success: true,
+      data: count,
+    });
+  });
+});
+
 // 获取 板块预览页面的分布 的接口
 router.post('/getRemainNums', async (req, res) => {
   const { invitationCode } = req.body;

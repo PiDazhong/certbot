@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button, Input, message, Tooltip } from 'antd';
 import {
   InfoCircleOutlined,
@@ -64,6 +64,8 @@ const downZip = (url, fileName) => {
 };
 
 const Certbot = () => {
+  // 成功的数量
+  const [successCount, setSuccessCount] = useState(0);
   // 邀请码
   const [invitationCode, setInvitationCode] = useState('');
   // 邀请码可用次数
@@ -80,6 +82,27 @@ const Certbot = () => {
   const [downLoading, setDownLoading] = useState(false);
   // 冷却时间计时器
   const remainTimeRef = useRef(null);
+
+  useEffect(() => {
+    querySuccessCount();
+  }, []);
+
+  // 获取 成功申请的数量
+  const querySuccessCount = async () => {
+    try {
+      const { success, data } = await fetchRequest(
+        '/mysql/getApplyNums',
+        'get',
+      );
+      if (success) {
+        setSuccessCount(data);
+      } else {
+        setSuccessCount(0);
+      }
+    } catch (e) {
+      setSuccessCount(0);
+    }
+  };
 
   const renderCopyIcon = (content) => {
     return (
@@ -272,6 +295,9 @@ const Certbot = () => {
         <div className="title-item">
           <img src="/favicon.ico" alt="Certificate" />
           <div className="title-item-label">SSL证书申请</div>
+        </div>
+        <div className="success-result-item">
+          当前已经成功为 {successCount} 个域名成功申请证书
         </div>
         <div className="line-item">
           <div className="line-item-label">邀请码</div>
