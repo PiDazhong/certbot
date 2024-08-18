@@ -1,8 +1,67 @@
 import { useState, useRef } from 'react';
 import { Button, Input, message, Tooltip } from 'antd';
-import { InfoCircleOutlined, CloseOutlined } from '@ant-design/icons';
+import {
+  InfoCircleOutlined,
+  CloseOutlined,
+  CopyOutlined,
+} from '@ant-design/icons';
 import { fetchRequest } from 'utils';
 import './index.scss';
+
+const copyToClipBoard = (content) => {
+  if (!navigator.clipboard) {
+    return new Promise((resolve, reject) => {
+      let inputEle = document.getElementById('clipboard');
+
+      if (!inputEle) {
+        inputEle = document.createElement('input');
+        inputEle.id = 'clipboard';
+        document.body.appendChild(inputEle);
+      }
+
+      inputEle.setAttribute('value', content);
+      inputEle.style.display = 'block';
+
+      if (inputEle && inputEle.select) {
+        inputEle.select();
+        try {
+          const isSuccessful = document.execCommand('copy');
+          isSuccessful ? resolve() : reject();
+        } catch (err) {
+          reject(err);
+        }
+      }
+      inputEle.style.display = 'none';
+    });
+  } else {
+    return new Promise((resolve, reject) => {
+      navigator.clipboard
+        .writeText(content)
+        .then(() => {
+          message.success('复制成功');
+          resolve();
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  }
+};
+
+const downZip = (url, fileName) => {
+  // 创建一个新的 a 标签
+  const a = document.createElement('a');
+  // 设置 a 标签的 href 为传入的下载链接
+  a.href = url;
+  // 设置下载文件的名称
+  a.download = `${fileName}.zip`;
+  // 将 a 标签添加到文档中
+  document.body.appendChild(a);
+  // 触发 a 标签的点击事件，开始下载
+  a.click();
+  // 下载完成后移除 a 标签
+  document.body.removeChild(a);
+};
 
 const Certbot = () => {
   // 邀请码
@@ -22,19 +81,16 @@ const Certbot = () => {
   // 冷却时间计时器
   const remainTimeRef = useRef(null);
 
-  const downZip = (url) => {
-    // 创建一个新的 a 标签
-    const a = document.createElement('a');
-    // 设置 a 标签的 href 为传入的下载链接
-    a.href = url;
-    // 设置下载文件的名称
-    a.download = `${domain}.zip`;
-    // 将 a 标签添加到文档中
-    document.body.appendChild(a);
-    // 触发 a 标签的点击事件，开始下载
-    a.click();
-    // 下载完成后移除 a 标签
-    document.body.removeChild(a);
+  const renderCopyIcon = (content) => {
+    return (
+      <Tooltip title={`点击复制 ${content}`}>
+        <CopyOutlined
+          onClick={() => {
+            copyToClipBoard(content);
+          }}
+        />
+      </Tooltip>
+    );
   };
 
   // 从 message 里面 下载
@@ -45,7 +101,8 @@ const Certbot = () => {
       content: (
         <div className="down-certbot-message-content">
           <span>下载地址 {url}</span>
-          <span className="clickable" onClick={() => downZip(url)}>
+          {renderCopyIcon(url)}
+          <span className="clickable" onClick={() => downZip(url, domain)}>
             点击下载
           </span>
         </div>
@@ -107,19 +164,36 @@ const Certbot = () => {
           return;
         }
         setProcessId(processId);
+
+        const acme = '_acme-challenge';
+
+        const runExec = ` nslookup -q=txt _acme-challenge.${domain} `;
+
         message.success({
           className: 'apply-certbot-message',
           content: (
             <div className="apply-certbot-message-content">
               <span>证书申请中...</span>
               <span>
-                请设置域名的txt解析：设置 _acme-challenge.{domain} 的解析值为
+                请设置域名的txt解析：设置 {acme}.{domain}
+                {renderCopyIcon(acme)}
+              </span>
+              <span>
+                的解析值为
                 {text}
+                {renderCopyIcon(text)}
               </span>
               <span>这一步是验证你对于域名的拥有权，不要忘记设置解析。</span>
               <span>
-                设置成功后，可以调用命令 " nslookup -q=txt _acme-challenge.
-                {domain} " 来验证是否设置成功；
+                设置成功后，可以调用命令 {runExec}
+                {renderCopyIcon(runExec)}
+                <span
+                  className="clickable"
+                  onClick={() => copyToClipBoard(runExec)}
+                >
+                  点击复制
+                </span>{' '}
+                来验证是否设置成功；
               </span>
               <span>
                 txt值解析成功后，才可以点击申请下载证书 (请在
