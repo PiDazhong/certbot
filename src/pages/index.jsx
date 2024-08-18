@@ -172,30 +172,39 @@ const Certbot = () => {
           className: 'apply-certbot-message',
           content: (
             <div className="apply-certbot-message-content">
-              <span>{'>.'}证书申请中...</span>
               <span>
-                {'>.'}请设置域名的txt解析：设置 {acme}.{domain}
+                <span className="line-start">{'>.'}</span>
+                证书申请中...
+              </span>
+              <span>
+                <span className="line-start">{'>.'}</span>
+                请设置域名的txt解析：设置 {acme}.{domain}
                 {renderCopyIcon(acme)}
               </span>
               <span>
-                {'     '}的解析值为
+                <span className="line-start long-line-start"></span>
+                解析值：
                 {text}
                 {renderCopyIcon(text)}
               </span>
               <span>
-                {'>.'}这一步是验证你对于域名的拥有权，不要忘记设置解析。
+                <span className="line-start">{'>.'}</span>
+                这一步是验证你对于域名的拥有权，不要忘记设置解析。
               </span>
               <span>
-                {'>.'}设置成功后，可以调用命令 {runExec}
+                <span className="line-start">{'>.'}</span>
+                设置成功后，可以调用命令 {runExec}
                 {renderCopyIcon(runExec)}
                 来验证是否设置成功；
               </span>
               <span>
-                {'>.'}txt值解析成功后，才可以点击申请下载证书 (请在
+                <span className="line-start">{'>.'}</span>
+                txt值解析成功后，才可以点击申请下载证书 (请在
                 5分钟后、20分钟以内，点击下载申请，否则此次申请进程将被终止)
               </span>
               <span>
-                {'>.'}邀请码剩余可用次数：{newNums}
+                <span className="line-start">{'>.'}</span>邀请码剩余可用次数：
+                {newNums}
               </span>
               <CloseOutlined onClick={() => message.destroy('applyCertbot')} />
             </div>

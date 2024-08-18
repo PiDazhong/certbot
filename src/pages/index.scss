@@ -104,6 +104,14 @@
       line-height: 30px;
     }
 
+    .line-start {
+      margin-right: 8px;
+
+      &.long-line-start {
+        margin-left: 86px;
+      }
+    }
+
     .anticon-copy {
       cursor: pointer;
       color: var(--black45) !important;
