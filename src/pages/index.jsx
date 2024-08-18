@@ -83,13 +83,11 @@ const Certbot = () => {
 
   const renderCopyIcon = (content) => {
     return (
-      <Tooltip title={`点击复制 ${content}`}>
-        <CopyOutlined
-          onClick={() => {
-            copyToClipBoard(content);
-          }}
-        />
-      </Tooltip>
+      <CopyOutlined
+        onClick={() => {
+          copyToClipBoard(content);
+        }}
+      />
     );
   };
 
@@ -174,33 +172,31 @@ const Certbot = () => {
           className: 'apply-certbot-message',
           content: (
             <div className="apply-certbot-message-content">
-              <span>证书申请中...</span>
+              <span>{'>.'}证书申请中...</span>
               <span>
-                请设置域名的txt解析：设置 {acme}.{domain}
+                {'>.'}请设置域名的txt解析：设置 {acme}.{domain}
                 {renderCopyIcon(acme)}
               </span>
               <span>
-                的解析值为
+                {'     '}的解析值为
                 {text}
                 {renderCopyIcon(text)}
               </span>
-              <span>这一步是验证你对于域名的拥有权，不要忘记设置解析。</span>
               <span>
-                设置成功后，可以调用命令 {runExec}
+                {'>.'}这一步是验证你对于域名的拥有权，不要忘记设置解析。
+              </span>
+              <span>
+                {'>.'}设置成功后，可以调用命令 {runExec}
                 {renderCopyIcon(runExec)}
-                <span
-                  className="clickable"
-                  onClick={() => copyToClipBoard(runExec)}
-                >
-                  点击复制
-                </span>{' '}
                 来验证是否设置成功；
               </span>
               <span>
-                txt值解析成功后，才可以点击申请下载证书 (请在
+                {'>.'}txt值解析成功后，才可以点击申请下载证书 (请在
                 5分钟后、20分钟以内，点击下载申请，否则此次申请进程将被终止)
               </span>
-              <span>邀请码剩余可用次数：{newNums}</span>
+              <span>
+                {'>.'}邀请码剩余可用次数：{newNums}
+              </span>
               <CloseOutlined onClick={() => message.destroy('applyCertbot')} />
             </div>
           ),
