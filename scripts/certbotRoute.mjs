@@ -22,16 +22,18 @@ const closeCertbot = async () => {
       const lines = stdout.trim().split('\n');
       let found = false;
       let pid = '';
+      let runLine = '';
       for (const line of lines) {
         if (line.includes('sudo certbot')) {
           const parts = line.trim().split(/\s+/);
           pid = parts[1];
           found = true;
+          runLine = line.trim();
           break;
         }
       }
       if (found) {
-        console.log(`找到了正在运行的certbot进程: ${pid}`);
+        console.log(`找到了正在运行的certbot进程: ${runLine},`);
         exec(`kill -9 ${pid}`, (error, stdout, stderr) => {
           if (error) {
             reject(new Error('进程清除失败: ' + String(stderr)));
