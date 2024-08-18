@@ -105,6 +105,7 @@ const Certbot = () => {
           <span className="clickable" onClick={() => downZip(url, domain)}>
             点击下载
           </span>
+          <CloseOutlined onClick={() => message.destroy(url)} />
         </div>
       ),
       key: url,
