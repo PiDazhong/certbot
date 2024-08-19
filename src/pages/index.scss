@@ -57,13 +57,13 @@
     justify-content: flex-start;
 
     .line-item-label {
-      width: 180px;
+      width: 200px;
       color: var(--black85);
       text-align: right;
       margin-right: 12px;
 
       &.short-label {
-        width: 80px;
+        width: 130px;
       }
     }
 
