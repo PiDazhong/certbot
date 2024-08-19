@@ -12,6 +12,7 @@ const __dirname = path.dirname(__filename);
 
 // 检查最近一次 commit 是否有变更指定文件
 const checkCommitChanges = (filepaths) => {
+  return true;
   try {
     // 获取最近一次 commit 的文件变更列表
     const changes = execSync('git diff --name-only HEAD^ HEAD')
