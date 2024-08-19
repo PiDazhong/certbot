@@ -7,6 +7,7 @@ import {
   CopyOutlined,
 } from '@ant-design/icons';
 import { fetchRequest } from 'utils';
+import useUrlParams from './useUrlParams';
 import './index.scss';
 
 const copyToClipBoard = (content) => {
@@ -65,11 +66,13 @@ const downZip = (url, fileName) => {
 };
 
 const Certbot = () => {
+  const { code } = useUrlParams();
+
   // 成功的数量
   const [successCount, setSuccessCount] = useState(0);
-  // 邀请码
-  const [invitationCode, setInvitationCode] = useState('');
-  // 邀请码可用次数
+  // 申请码
+  const [invitationCode, setInvitationCode] = useState(code || '');
+  // 申请码可用次数
   const [remainNums, setRemainNums] = useState(0);
   // 域名
   const [domain, setDomain] = useState('example.com');
@@ -143,11 +146,11 @@ const Certbot = () => {
     });
   };
 
-  // 查询邀请码剩余可用次数
+  // 查询申请码剩余可用次数
   const queryRemainNums = async () => {
     setCanForceDown(false);
     if (!invitationCode || !invitationCode.includes('_')) {
-      message.warning('邀请码不合法');
+      message.warning('申请码不合法');
       return;
     }
     try {
@@ -159,7 +162,7 @@ const Certbot = () => {
         },
       );
       if (success) {
-        message.success(`邀请码剩余可用次数：${remainNums}`);
+        message.success(`申请码剩余可用次数：${remainNums}`);
         setRemainNums(remainNums || 0);
       } else {
         setRemainNums(0);
@@ -170,7 +173,7 @@ const Certbot = () => {
     }
   };
 
-  // 生成一个邀请码
+  // 生成一个申请码
   const createInvitationCode = async () => {
     try {
       const { success, data } = await fetchRequest(
@@ -178,7 +181,7 @@ const Certbot = () => {
         'get',
       );
       if (success) {
-        messageDown(data, '邀请码', true);
+        messageDown(data, '申请码', true);
       }
     } catch (e) {
       console.log(e);
@@ -252,7 +255,7 @@ const Certbot = () => {
                 解析成功后、20分钟以内，点击下载申请，否则此次申请进程将被终止)
               </span>
               <span>
-                <span className="line-start">{'>.'}</span>邀请码剩余可用次数：
+                <span className="line-start">{'>.'}</span>申请码剩余可用次数：
                 {newNums}
               </span>
               <CloseOutlined onClick={() => message.destroy('applyCertbot')} />
@@ -338,14 +341,14 @@ const Certbot = () => {
           个域名成功申请证书
         </div>
         <div className="line-item">
-          <div className="line-item-label">邀请码</div>
+          <div className="line-item-label">申请码</div>
           <div className="line-item-content">
             <Input
-              placeholder="请输入邀请码"
+              placeholder="请输入申请码"
               value={invitationCode}
               onChange={(e) => setInvitationCode(e.target.value)}
             />
-            <Tooltip title="由于证书申请需要服务器资源，所以这里需要找作者要邀请码才能继续申请证书，请打开控制台联系作者">
+            <Tooltip title="由于证书申请需要服务器资源，所以这里需要找作者要申请码才能继续申请证书，请打开控制台联系作者">
               <InfoCircleOutlined />
             </Tooltip>
             <Button onClick={() => queryRemainNums()}>测试</Button>
@@ -364,7 +367,7 @@ const Certbot = () => {
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
             />
-            <Tooltip title="请直接输入顶级域名，申请下来的证书会包含这个顶级域名下的所有一级域名，必须点击测试，得到邀请码剩余可用次数才能点击申请">
+            <Tooltip title="请直接输入顶级域名，申请下来的证书会包含这个顶级域名下的所有一级域名，必须点击测试，得到申请码剩余可用次数才能点击申请">
               <InfoCircleOutlined />
             </Tooltip>
           </div>
@@ -387,7 +390,7 @@ const Certbot = () => {
           <div className="line-item-label short-label"></div>
           <div className="line-item-content">
             <Tooltip
-              title={!(remainNums > 0) && '请填写邀请码并且测试邀请码可用次数'}
+              title={!(remainNums > 0) && '请填写申请码并且测试申请码可用次数'}
             >
               <Button
                 type="primary"
@@ -416,14 +419,16 @@ const Certbot = () => {
             >
               校验dns-txt解析并下载
             </Button>
-            <Button
-              type="primary"
-              disabled={remainTime > 0 || !processId}
-              onClick={() => downCertbot(true)}
-              loading={downLoading}
-            >
-              跳过校验直接下载
-            </Button>
+            {localStorage.getItem('quantanalysis_jwt') && (
+              <Button
+                type="primary"
+                disabled={remainTime > 0 || !processId}
+                onClick={() => downCertbot(true)}
+                loading={downLoading}
+              >
+                跳过校验直接下载
+              </Button>
+            )}
             <Button
               type="primary"
               disabled={!canForceDown}
