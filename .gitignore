@@ -13,7 +13,6 @@ dist-ssr
 *.local
 certbot
 scripts
-scripts2
 
 # Editor directories and files
 .vscode/*
