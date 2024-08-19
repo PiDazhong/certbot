@@ -3,10 +3,9 @@
  */
 
 import React from 'react';
-import { useLocation } from 'react-router-dom';
 
 const useUrlParams = () => {
-  const { search } = useLocation();
+  const { search } = window.location;
 
   const params = new URLSearchParams(search);
 
